@@ -328,7 +328,7 @@ export function PortalProvider({ children }: { children: ReactNode }) {
           "Not Available": 2,
         };
         candidates.sort((a, b) => {
-          const s = order[a.status] - order[b.status];
+          const s = (order[a.status] ?? 3) - (order[b.status] ?? 3);
           if (s !== 0) return s;
           if (a.hospital.status !== b.hospital.status) return a.hospital.status === "Active" ? -1 : 1;
           return b.hospital.beds - a.hospital.beds;

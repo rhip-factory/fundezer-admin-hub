@@ -140,7 +140,7 @@ export interface Transfer {
   reason: string;
   treatmentPhase: string;
   treatmentPlan: string;
-  timeline: { status: string; at: string; by: string; note?: string }[];
+  timeline: { status: string; at: string; by: string; note?: string | undefined }[];
 }
 
 export interface AuditEntry {
