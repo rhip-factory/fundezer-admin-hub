@@ -16,6 +16,7 @@ import { Route as CausesRouteImport } from './routes/causes'
 import { Route as DonationsRouteImport } from './routes/donations'
 import { Route as HospitalsRouteImport } from './routes/hospitals'
 import { Route as PatientsRouteImport } from './routes/patients'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as TransfersRouteImport } from './routes/transfers'
 
 const IndexRoute = IndexRouteImport.update({
@@ -53,6 +54,11 @@ const PatientsRoute = PatientsRouteImport.update({
   path: '/patients',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TransfersRoute = TransfersRouteImport.update({
   id: '/transfers',
   path: '/transfers',
@@ -67,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/donations': typeof DonationsRoute
   '/hospitals': typeof HospitalsRoute
   '/patients': typeof PatientsRoute
+  '/profile': typeof ProfileRoute
   '/transfers': typeof TransfersRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/donations': typeof DonationsRoute
   '/hospitals': typeof HospitalsRoute
   '/patients': typeof PatientsRoute
+  '/profile': typeof ProfileRoute
   '/transfers': typeof TransfersRoute
 }
 export interface FileRoutesById {
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/donations': typeof DonationsRoute
   '/hospitals': typeof HospitalsRoute
   '/patients': typeof PatientsRoute
+  '/profile': typeof ProfileRoute
   '/transfers': typeof TransfersRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/donations'
     | '/hospitals'
     | '/patients'
+    | '/profile'
     | '/transfers'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/donations'
     | '/hospitals'
     | '/patients'
+    | '/profile'
     | '/transfers'
   id:
     | '__root__'
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/donations'
     | '/hospitals'
     | '/patients'
+    | '/profile'
     | '/transfers'
   fileRoutesById: FileRoutesById
 }
@@ -131,6 +143,7 @@ export interface RootRouteChildren {
   DonationsRoute: typeof DonationsRoute
   HospitalsRoute: typeof HospitalsRoute
   PatientsRoute: typeof PatientsRoute
+  ProfileRoute: typeof ProfileRoute
   TransfersRoute: typeof TransfersRoute
 }
 
@@ -185,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PatientsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/transfers': {
       id: '/transfers'
       path: '/transfers'
@@ -203,6 +223,7 @@ const rootRouteChildren: RootRouteChildren = {
   DonationsRoute: DonationsRoute,
   HospitalsRoute: HospitalsRoute,
   PatientsRoute: PatientsRoute,
+  ProfileRoute: ProfileRoute,
   TransfersRoute: TransfersRoute,
 }
 export const routeTree = rootRouteImport
