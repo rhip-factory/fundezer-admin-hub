@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CampaignsRouteImport } from './routes/campaigns'
 import { Route as CausesRouteImport } from './routes/causes'
+import { Route as DonationsRouteImport } from './routes/donations'
 import { Route as HospitalsRouteImport } from './routes/hospitals'
 import { Route as PatientsRouteImport } from './routes/patients'
 import { Route as TransfersRouteImport } from './routes/transfers'
@@ -29,6 +30,11 @@ const CampaignsRoute = CampaignsRouteImport.update({
 const CausesRoute = CausesRouteImport.update({
   id: '/causes',
   path: '/causes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DonationsRoute = DonationsRouteImport.update({
+  id: '/donations',
+  path: '/donations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HospitalsRoute = HospitalsRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/campaigns': typeof CampaignsRoute
   '/causes': typeof CausesRoute
+  '/donations': typeof DonationsRoute
   '/hospitals': typeof HospitalsRoute
   '/patients': typeof PatientsRoute
   '/transfers': typeof TransfersRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/campaigns': typeof CampaignsRoute
   '/causes': typeof CausesRoute
+  '/donations': typeof DonationsRoute
   '/hospitals': typeof HospitalsRoute
   '/patients': typeof PatientsRoute
   '/transfers': typeof TransfersRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/campaigns': typeof CampaignsRoute
   '/causes': typeof CausesRoute
+  '/donations': typeof DonationsRoute
   '/hospitals': typeof HospitalsRoute
   '/patients': typeof PatientsRoute
   '/transfers': typeof TransfersRoute
@@ -75,14 +84,28 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/campaigns' | '/causes' | '/hospitals' | '/patients' | '/transfers'
+    | '/'
+    | '/campaigns'
+    | '/causes'
+    | '/donations'
+    | '/hospitals'
+    | '/patients'
+    | '/transfers'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/campaigns' | '/causes' | '/hospitals' | '/patients' | '/transfers'
+  to:
+    | '/'
+    | '/campaigns'
+    | '/causes'
+    | '/donations'
+    | '/hospitals'
+    | '/patients'
+    | '/transfers'
   id:
     | '__root__'
     | '/'
     | '/campaigns'
     | '/causes'
+    | '/donations'
     | '/hospitals'
     | '/patients'
     | '/transfers'
@@ -92,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CampaignsRoute: typeof CampaignsRoute
   CausesRoute: typeof CausesRoute
+  DonationsRoute: typeof DonationsRoute
   HospitalsRoute: typeof HospitalsRoute
   PatientsRoute: typeof PatientsRoute
   TransfersRoute: typeof TransfersRoute
@@ -118,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/causes'
       fullPath: '/causes'
       preLoaderRoute: typeof CausesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/donations': {
+      id: '/donations'
+      path: '/donations'
+      fullPath: '/donations'
+      preLoaderRoute: typeof DonationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hospitals': {
@@ -148,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CampaignsRoute: CampaignsRoute,
   CausesRoute: CausesRoute,
+  DonationsRoute: DonationsRoute,
   HospitalsRoute: HospitalsRoute,
   PatientsRoute: PatientsRoute,
   TransfersRoute: TransfersRoute,
