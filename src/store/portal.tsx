@@ -20,11 +20,13 @@ import {
   type AuditEntry,
   type Campaign,
   type CampaignStatus,
+  type CapabilityStatus,
   type Cause,
   type Donation,
   type Hospital,
   type Patient,
   type Service,
+  SERVICES,
   type Transfer,
   type TransferStatus,
 } from "@/data/fundezer";
@@ -53,6 +55,30 @@ interface CauseDraft {
   fundingTarget: number;
 }
 
+export interface HospitalDraft {
+  name: string;
+  city: string;
+  state: string;
+  contactRole: string;
+  email: string;
+  phone: string;
+  beds: number;
+  accreditation: string;
+  verification: "Verified" | "Pending" | "Suspended";
+  status: "Active" | "Inactive";
+  availableServices: Service[];
+}
+
+export interface CampaignDraft {
+  title: string;
+  patientId: string;
+  hospitalId: string;
+  causeId: string;
+  target: number;
+  status: CampaignStatus;
+  summary: string;
+}
+
 interface PortalValue {
   hospitals: Hospital[];
   patients: Patient[];
@@ -68,6 +94,8 @@ interface PortalValue {
   cause: (id?: string) => Cause | undefined;
   campaign: (id?: string) => Campaign | undefined;
   transfer: (id?: string) => Transfer | undefined;
+  createHospital: (draft: HospitalDraft) => void;
+  createCampaign: (draft: CampaignDraft) => void;
   createCause: (draft: CauseDraft) => void;
   updateCause: (id: string, draft: CauseDraft) => void;
   setCauseStatus: (id: string, status: "Active" | "Inactive") => void;
@@ -90,7 +118,7 @@ let seq = 100;
 const nextId = (prefix: string) => `${prefix}-${++seq}`;
 
 export function PortalProvider({ children }: { children: ReactNode }) {
-  const [hospitals] = useState<Hospital[]>(hospitalSeed);
+  const [hospitals, setHospitals] = useState<Hospital[]>(hospitalSeed);
   const [patients, setPatients] = useState<Patient[]>(patientSeed);
   const [causes, setCauses] = useState<Cause[]>(causeSeed);
   const [campaigns, setCampaigns] = useState<Campaign[]>(campaignSeed);
@@ -161,6 +189,61 @@ export function PortalProvider({ children }: { children: ReactNode }) {
       cause: byId(causes),
       campaign: byId(campaigns),
       transfer: byId(transfers),
+
+      createHospital: (draft) => {
+        const id = nextId("HSP");
+        const capabilities = SERVICES.reduce(
+          (acc, s) => {
+            acc[s] = draft.availableServices.includes(s)
+              ? "Available"
+              : ("Not Available" as CapabilityStatus);
+            return acc;
+          },
+          {} as Record<Service, CapabilityStatus>,
+        );
+        setHospitals((prev) => [
+          {
+            id,
+            name: draft.name,
+            city: draft.city,
+            state: draft.state,
+            verification: draft.verification,
+            status: draft.status,
+            contactRole: draft.contactRole,
+            email: draft.email,
+            phone: draft.phone,
+            beds: draft.beds,
+            accreditation: draft.accreditation,
+            onboarded: today(),
+            capabilities,
+            equipment: [],
+          },
+          ...prev,
+        ]);
+        log("Hospital Added", "Hospital", id, `New hospital "${draft.name}" onboarded as ${draft.verification}.`);
+        toast.success("Hospital added", { description: `${draft.name} is now in the directory.` });
+      },
+
+      createCampaign: (draft) => {
+        const id = nextId("CMP");
+        setCampaigns((prev) => [
+          {
+            id,
+            title: draft.title,
+            patientId: draft.patientId,
+            hospitalId: draft.hospitalId,
+            causeId: draft.causeId,
+            target: draft.target,
+            raised: 0,
+            status: draft.status,
+            created: today(),
+            summary: draft.summary,
+          },
+          ...prev,
+        ]);
+        log("Campaign Created", "Campaign", id, `Campaign "${draft.title}" created as ${draft.status}.`);
+        toast.success("Campaign created", { description: `${draft.title} has been added.` });
+      },
 
       createCause: (draft) => {
         const id = nextId("CAU");
