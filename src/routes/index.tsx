@@ -193,6 +193,7 @@ function Dashboard() {
                 stroke="var(--color-chart-1)"
                 fill="url(#gPatient)"
                 strokeWidth={2}
+                isAnimationActive={false}
               />
               <Area
                 type="monotone"
@@ -200,6 +201,7 @@ function Dashboard() {
                 stroke="var(--color-chart-3)"
                 fill="url(#gCause)"
                 strokeWidth={2}
+                isAnimationActive={false}
               />
             </AreaChart>
           </ResponsiveContainer>
