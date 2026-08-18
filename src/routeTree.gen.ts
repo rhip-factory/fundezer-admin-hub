@@ -10,33 +10,154 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuditLogRouteImport } from './routes/audit-log'
+import { Route as CampaignsRouteImport } from './routes/campaigns'
+import { Route as CausesRouteImport } from './routes/causes'
+import { Route as DonationsRouteImport } from './routes/donations'
+import { Route as HospitalsRouteImport } from './routes/hospitals'
+import { Route as PatientsRouteImport } from './routes/patients'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TransfersRouteImport } from './routes/transfers'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuditLogRoute = AuditLogRouteImport.update({
+  id: '/audit-log',
+  path: '/audit-log',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CampaignsRoute = CampaignsRouteImport.update({
+  id: '/campaigns',
+  path: '/campaigns',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CausesRoute = CausesRouteImport.update({
+  id: '/causes',
+  path: '/causes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DonationsRoute = DonationsRouteImport.update({
+  id: '/donations',
+  path: '/donations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HospitalsRoute = HospitalsRouteImport.update({
+  id: '/hospitals',
+  path: '/hospitals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PatientsRoute = PatientsRouteImport.update({
+  id: '/patients',
+  path: '/patients',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransfersRoute = TransfersRouteImport.update({
+  id: '/transfers',
+  path: '/transfers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/audit-log': typeof AuditLogRoute
+  '/campaigns': typeof CampaignsRoute
+  '/causes': typeof CausesRoute
+  '/donations': typeof DonationsRoute
+  '/hospitals': typeof HospitalsRoute
+  '/patients': typeof PatientsRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
+  '/transfers': typeof TransfersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/audit-log': typeof AuditLogRoute
+  '/campaigns': typeof CampaignsRoute
+  '/causes': typeof CausesRoute
+  '/donations': typeof DonationsRoute
+  '/hospitals': typeof HospitalsRoute
+  '/patients': typeof PatientsRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
+  '/transfers': typeof TransfersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/audit-log': typeof AuditLogRoute
+  '/campaigns': typeof CampaignsRoute
+  '/causes': typeof CausesRoute
+  '/donations': typeof DonationsRoute
+  '/hospitals': typeof HospitalsRoute
+  '/patients': typeof PatientsRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
+  '/transfers': typeof TransfersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/audit-log'
+    | '/campaigns'
+    | '/causes'
+    | '/donations'
+    | '/hospitals'
+    | '/patients'
+    | '/profile'
+    | '/settings'
+    | '/transfers'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/audit-log'
+    | '/campaigns'
+    | '/causes'
+    | '/donations'
+    | '/hospitals'
+    | '/patients'
+    | '/profile'
+    | '/settings'
+    | '/transfers'
+  id:
+    | '__root__'
+    | '/'
+    | '/audit-log'
+    | '/campaigns'
+    | '/causes'
+    | '/donations'
+    | '/hospitals'
+    | '/patients'
+    | '/profile'
+    | '/settings'
+    | '/transfers'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuditLogRoute: typeof AuditLogRoute
+  CampaignsRoute: typeof CampaignsRoute
+  CausesRoute: typeof CausesRoute
+  DonationsRoute: typeof DonationsRoute
+  HospitalsRoute: typeof HospitalsRoute
+  PatientsRoute: typeof PatientsRoute
+  ProfileRoute: typeof ProfileRoute
+  SettingsRoute: typeof SettingsRoute
+  TransfersRoute: typeof TransfersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +169,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/audit-log': {
+      id: '/audit-log'
+      path: '/audit-log'
+      fullPath: '/audit-log'
+      preLoaderRoute: typeof AuditLogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/campaigns': {
+      id: '/campaigns'
+      path: '/campaigns'
+      fullPath: '/campaigns'
+      preLoaderRoute: typeof CampaignsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/causes': {
+      id: '/causes'
+      path: '/causes'
+      fullPath: '/causes'
+      preLoaderRoute: typeof CausesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/donations': {
+      id: '/donations'
+      path: '/donations'
+      fullPath: '/donations'
+      preLoaderRoute: typeof DonationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hospitals': {
+      id: '/hospitals'
+      path: '/hospitals'
+      fullPath: '/hospitals'
+      preLoaderRoute: typeof HospitalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/patients': {
+      id: '/patients'
+      path: '/patients'
+      fullPath: '/patients'
+      preLoaderRoute: typeof PatientsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transfers': {
+      id: '/transfers'
+      path: '/transfers'
+      fullPath: '/transfers'
+      preLoaderRoute: typeof TransfersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuditLogRoute: AuditLogRoute,
+  CampaignsRoute: CampaignsRoute,
+  CausesRoute: CausesRoute,
+  DonationsRoute: DonationsRoute,
+  HospitalsRoute: HospitalsRoute,
+  PatientsRoute: PatientsRoute,
+  ProfileRoute: ProfileRoute,
+  SettingsRoute: SettingsRoute,
+  TransfersRoute: TransfersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
