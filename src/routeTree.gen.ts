@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CausesRouteImport } from './routes/causes'
 import { Route as HospitalsRouteImport } from './routes/hospitals'
 import { Route as PatientsRouteImport } from './routes/patients'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CausesRoute = CausesRouteImport.update({
+  id: '/causes',
+  path: '/causes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HospitalsRoute = HospitalsRouteImport.update({
@@ -31,30 +37,34 @@ const PatientsRoute = PatientsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/causes': typeof CausesRoute
   '/hospitals': typeof HospitalsRoute
   '/patients': typeof PatientsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/causes': typeof CausesRoute
   '/hospitals': typeof HospitalsRoute
   '/patients': typeof PatientsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/causes': typeof CausesRoute
   '/hospitals': typeof HospitalsRoute
   '/patients': typeof PatientsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/hospitals' | '/patients'
+  fullPaths: '/' | '/causes' | '/hospitals' | '/patients'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/hospitals' | '/patients'
-  id: '__root__' | '/' | '/hospitals' | '/patients'
+  to: '/' | '/causes' | '/hospitals' | '/patients'
+  id: '__root__' | '/' | '/causes' | '/hospitals' | '/patients'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CausesRoute: typeof CausesRoute
   HospitalsRoute: typeof HospitalsRoute
   PatientsRoute: typeof PatientsRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/causes': {
+      id: '/causes'
+      path: '/causes'
+      fullPath: '/causes'
+      preLoaderRoute: typeof CausesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hospitals': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CausesRoute: CausesRoute,
   HospitalsRoute: HospitalsRoute,
   PatientsRoute: PatientsRoute,
 }

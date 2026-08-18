@@ -228,14 +228,14 @@ function CausesPage() {
           </DialogHeader>
 
           <div className="space-y-4">
-            <LabeledInput label="Cause name" error={errors["name"]}>
+            <LabeledInput label="Cause name" error={errors["name"] ?? ""}>
               <Input
                 value={draft.name}
                 onChange={(e) => setDraft({ ...draft, name: e.target.value })}
                 placeholder="e.g. Cancer Care"
               />
             </LabeledInput>
-            <LabeledInput label="Description" error={errors["description"]}>
+            <LabeledInput label="Description" error={errors["description"] ?? ""}>
               <Textarea
                 rows={4}
                 value={draft.description}
@@ -245,7 +245,7 @@ function CausesPage() {
             </LabeledInput>
             <LabeledInput
               label="Funding target (₦)"
-              error={errors["fundingTarget"]}
+              error={errors["fundingTarget"] ?? ""}
               hint="Total amount this pool aims to raise."
             >
               <Input
