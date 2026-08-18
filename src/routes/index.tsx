@@ -27,7 +27,7 @@ import {
   Th,
   Td,
   Tr,
-  FundingBar,
+  FundingProgress,
 } from "@/components/admin/primitives";
 import { Button } from "@/components/ui/button";
 import { usePortal } from "@/store/portal";
@@ -225,7 +225,7 @@ function Dashboard() {
                   {c.patientsSupported} patients · {c.totalDonations} donations
                 </p>
               </div>
-              <FundingBar raised={c.pool} target={c.fundingTarget} />
+              <FundingProgress raised={c.pool} target={c.fundingTarget} />
             </div>
           ))}
         </SectionCard>
