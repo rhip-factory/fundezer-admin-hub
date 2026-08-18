@@ -148,7 +148,7 @@ function PatientsPage() {
         open={!!active}
         onOpenChange={(o) => !o && setSelected(null)}
         title={active?.displayName ?? ""}
-        subtitle={active ? `${active.reference} · ${active.treatment}` : undefined}
+        subtitle={active ? `${active.reference} · ${active.treatment}` : ""}
       >
         {active ? (
           <>
