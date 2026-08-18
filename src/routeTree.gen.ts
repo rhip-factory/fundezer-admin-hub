@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CampaignsRouteImport } from './routes/campaigns'
 import { Route as CausesRouteImport } from './routes/causes'
 import { Route as HospitalsRouteImport } from './routes/hospitals'
 import { Route as PatientsRouteImport } from './routes/patients'
@@ -18,6 +19,11 @@ import { Route as TransfersRouteImport } from './routes/transfers'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CampaignsRoute = CampaignsRouteImport.update({
+  id: '/campaigns',
+  path: '/campaigns',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CausesRoute = CausesRouteImport.update({
@@ -43,6 +49,7 @@ const TransfersRoute = TransfersRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/campaigns': typeof CampaignsRoute
   '/causes': typeof CausesRoute
   '/hospitals': typeof HospitalsRoute
   '/patients': typeof PatientsRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/campaigns': typeof CampaignsRoute
   '/causes': typeof CausesRoute
   '/hospitals': typeof HospitalsRoute
   '/patients': typeof PatientsRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/campaigns': typeof CampaignsRoute
   '/causes': typeof CausesRoute
   '/hospitals': typeof HospitalsRoute
   '/patients': typeof PatientsRoute
@@ -65,14 +74,23 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/causes' | '/hospitals' | '/patients' | '/transfers'
+  fullPaths:
+    '/' | '/campaigns' | '/causes' | '/hospitals' | '/patients' | '/transfers'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/causes' | '/hospitals' | '/patients' | '/transfers'
-  id: '__root__' | '/' | '/causes' | '/hospitals' | '/patients' | '/transfers'
+  to: '/' | '/campaigns' | '/causes' | '/hospitals' | '/patients' | '/transfers'
+  id:
+    | '__root__'
+    | '/'
+    | '/campaigns'
+    | '/causes'
+    | '/hospitals'
+    | '/patients'
+    | '/transfers'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CampaignsRoute: typeof CampaignsRoute
   CausesRoute: typeof CausesRoute
   HospitalsRoute: typeof HospitalsRoute
   PatientsRoute: typeof PatientsRoute
@@ -86,6 +104,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/campaigns': {
+      id: '/campaigns'
+      path: '/campaigns'
+      fullPath: '/campaigns'
+      preLoaderRoute: typeof CampaignsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/causes': {
@@ -121,6 +146,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CampaignsRoute: CampaignsRoute,
   CausesRoute: CausesRoute,
   HospitalsRoute: HospitalsRoute,
   PatientsRoute: PatientsRoute,
