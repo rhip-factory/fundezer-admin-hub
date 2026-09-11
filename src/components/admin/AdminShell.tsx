@@ -115,15 +115,13 @@ function SidebarBody({ onNavigate }: { onNavigate?: (() => void) | undefined }) 
           className="mb-1 flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-sidebar-accent"
         >
           <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-            {CURRENT_ADMIN.initials}
+            {initialsOf(name)}
           </span>
           <span className="min-w-0">
             <span className="block truncate text-sm font-medium text-sidebar-foreground">
-              {CURRENT_ADMIN.name}
+              {name}
             </span>
-            <span className="block truncate text-xs text-muted-foreground">
-              {CURRENT_ADMIN.role}
-            </span>
+            <span className="block truncate text-xs text-muted-foreground">{roleLabel}</span>
           </span>
         </Link>
         <Link
