@@ -39,20 +39,42 @@ export const Route = createFileRoute("/_authenticated/profile")({
 
 function ProfilePage() {
   const { audit } = usePortal();
-  const [name, setName] = useState(CURRENT_ADMIN.name);
-  const [email, setEmail] = useState(CURRENT_ADMIN.email);
-  const [phone, setPhone] = useState("+234 809 220 4410");
+  const { identity, session, refreshIdentity } = useAuth();
+  const accountEmail = identity?.profile.email ?? session?.user.email ?? "";
+  const accountName = identity?.profile.full_name ?? "";
+  const roleLabel = identity?.roles.length
+    ? (ROLE_LABELS[identity.roles[0] as string] ?? identity.roles[0]!)
+    : "No role assigned";
+
+  const [name, setName] = useState(accountName);
+  const [phone, setPhone] = useState(identity?.profile.phone ?? "");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
 
-  const mine = audit.filter((a) => a.user === CURRENT_ADMIN.name).slice(0, 8);
+  useEffect(() => {
+    setName(accountName);
+    setPhone(identity?.profile.phone ?? "");
+  }, [accountName, identity?.profile.phone]);
 
-  const save = () => {
+  const mine = audit.filter((a) => a.user === accountName).slice(0, 8);
+
+  const save = async () => {
     const next: Record<string, string> = {};
     if (name.trim().length < 3) next["name"] = "Enter your full name.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) next["email"] = "Enter a valid email address.";
     setErrors(next);
     if (Object.keys(next).length > 0) return;
-    toast.success("Profile saved", { description: "Prototype: changes are kept in memory only." });
+    setSaving(true);
+    try {
+      await updateMyProfile({ data: { full_name: name.trim(), phone: phone.trim() } });
+      await refreshIdentity();
+      toast.success("Profile saved");
+    } catch (error) {
+      toast.error("Could not save profile", {
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
