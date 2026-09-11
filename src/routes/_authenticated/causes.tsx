@@ -244,7 +244,7 @@ function CausesPage() {
                     <div className="min-w-0">
                       <h3 className="truncate text-sm font-semibold text-foreground">{c.name}</h3>
                       <p className="num text-xs text-muted-foreground">
-                        {c.id} · updated {shortDate(c.lastUpdated)}
+                        CAU-{c.id.slice(0, 6).toUpperCase()} · updated {shortDate(c.lastUpdated)}
                       </p>
                     </div>
                     <StatusBadge status={c.status} />
