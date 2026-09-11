@@ -1,5 +1,8 @@
 import { useState, type ReactNode } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { ROLE_LABELS, initialsOf, useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard,
   Users,
