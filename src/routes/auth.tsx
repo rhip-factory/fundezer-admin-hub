@@ -9,6 +9,7 @@ import { LabeledInput } from "@/components/admin/primitives";
 import logo from "@/assets/fundezer-logo.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Sign in — FundEzer Admin Portal" },
