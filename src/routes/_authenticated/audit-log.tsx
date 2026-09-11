@@ -15,7 +15,7 @@ import {
 import { usePortal } from "@/store/portal";
 import { dateTime } from "@/lib/format";
 
-export const Route = createFileRoute("/audit-log")({
+export const Route = createFileRoute("/_authenticated/_authenticated/audit-log")({
   head: () => ({
     meta: [
       { title: "Audit Log — FundEzer Admin Portal" },

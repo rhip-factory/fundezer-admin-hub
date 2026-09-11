@@ -21,7 +21,7 @@ import { usePortal } from "@/store/portal";
 import { SERVICES } from "@/data/fundezer";
 import { shortDate } from "@/lib/format";
 
-export const Route = createFileRoute("/hospitals")({
+export const Route = createFileRoute("/_authenticated/_authenticated/hospitals")({
   head: () => ({
     meta: [
       { title: "Hospitals — FundEzer Admin Portal" },

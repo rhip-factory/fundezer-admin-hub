@@ -9,109 +9,108 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuditLogRouteImport } from './routes/audit-log'
-import { Route as CampaignsRouteImport } from './routes/campaigns'
-import { Route as CausesRouteImport } from './routes/causes'
-import { Route as DonationsRouteImport } from './routes/donations'
-import { Route as HospitalsRouteImport } from './routes/hospitals'
-import { Route as PatientsRouteImport } from './routes/patients'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as TransfersRouteImport } from './routes/transfers'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedAuditLogRouteImport } from './routes/_authenticated/audit-log'
+import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authenticated/campaigns'
+import { Route as AuthenticatedCausesRouteImport } from './routes/_authenticated/causes'
+import { Route as AuthenticatedDonationsRouteImport } from './routes/_authenticated/donations'
+import { Route as AuthenticatedHospitalsRouteImport } from './routes/_authenticated/hospitals'
+import { Route as AuthenticatedPatientsRouteImport } from './routes/_authenticated/patients'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedTransfersRouteImport } from './routes/_authenticated/transfers'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/_authenticated/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuditLogRoute = AuditLogRouteImport.update({
-  id: '/audit-log',
+const AuthenticatedAuditLogRoute = AuthenticatedAuditLogRouteImport.update({
+  id: '/_authenticated/audit-log',
   path: '/audit-log',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CampaignsRoute = CampaignsRouteImport.update({
-  id: '/campaigns',
+const AuthenticatedCampaignsRoute = AuthenticatedCampaignsRouteImport.update({
+  id: '/_authenticated/campaigns',
   path: '/campaigns',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CausesRoute = CausesRouteImport.update({
-  id: '/causes',
+const AuthenticatedCausesRoute = AuthenticatedCausesRouteImport.update({
+  id: '/_authenticated/causes',
   path: '/causes',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DonationsRoute = DonationsRouteImport.update({
-  id: '/donations',
+const AuthenticatedDonationsRoute = AuthenticatedDonationsRouteImport.update({
+  id: '/_authenticated/donations',
   path: '/donations',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HospitalsRoute = HospitalsRouteImport.update({
-  id: '/hospitals',
+const AuthenticatedHospitalsRoute = AuthenticatedHospitalsRouteImport.update({
+  id: '/_authenticated/hospitals',
   path: '/hospitals',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PatientsRoute = PatientsRouteImport.update({
-  id: '/patients',
+const AuthenticatedPatientsRoute = AuthenticatedPatientsRouteImport.update({
+  id: '/_authenticated/patients',
   path: '/patients',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/_authenticated/profile',
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/_authenticated/settings',
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TransfersRoute = TransfersRouteImport.update({
-  id: '/transfers',
+const AuthenticatedTransfersRoute = AuthenticatedTransfersRouteImport.update({
+  id: '/_authenticated/transfers',
   path: '/transfers',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/audit-log': typeof AuditLogRoute
-  '/campaigns': typeof CampaignsRoute
-  '/causes': typeof CausesRoute
-  '/donations': typeof DonationsRoute
-  '/hospitals': typeof HospitalsRoute
-  '/patients': typeof PatientsRoute
-  '/profile': typeof ProfileRoute
-  '/settings': typeof SettingsRoute
-  '/transfers': typeof TransfersRoute
+  '/audit-log': typeof AuthenticatedAuditLogRoute
+  '/campaigns': typeof AuthenticatedCampaignsRoute
+  '/causes': typeof AuthenticatedCausesRoute
+  '/donations': typeof AuthenticatedDonationsRoute
+  '/hospitals': typeof AuthenticatedHospitalsRoute
+  '/patients': typeof AuthenticatedPatientsRoute
+  '/profile': typeof AuthenticatedProfileRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/transfers': typeof AuthenticatedTransfersRoute
+  '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/audit-log': typeof AuditLogRoute
-  '/campaigns': typeof CampaignsRoute
-  '/causes': typeof CausesRoute
-  '/donations': typeof DonationsRoute
-  '/hospitals': typeof HospitalsRoute
-  '/patients': typeof PatientsRoute
-  '/profile': typeof ProfileRoute
-  '/settings': typeof SettingsRoute
-  '/transfers': typeof TransfersRoute
+  '/audit-log': typeof AuthenticatedAuditLogRoute
+  '/campaigns': typeof AuthenticatedCampaignsRoute
+  '/causes': typeof AuthenticatedCausesRoute
+  '/donations': typeof AuthenticatedDonationsRoute
+  '/hospitals': typeof AuthenticatedHospitalsRoute
+  '/patients': typeof AuthenticatedPatientsRoute
+  '/profile': typeof AuthenticatedProfileRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/transfers': typeof AuthenticatedTransfersRoute
+  '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/audit-log': typeof AuditLogRoute
-  '/campaigns': typeof CampaignsRoute
-  '/causes': typeof CausesRoute
-  '/donations': typeof DonationsRoute
-  '/hospitals': typeof HospitalsRoute
-  '/patients': typeof PatientsRoute
-  '/profile': typeof ProfileRoute
-  '/settings': typeof SettingsRoute
-  '/transfers': typeof TransfersRoute
+  '/_authenticated/audit-log': typeof AuthenticatedAuditLogRoute
+  '/_authenticated/campaigns': typeof AuthenticatedCampaignsRoute
+  '/_authenticated/causes': typeof AuthenticatedCausesRoute
+  '/_authenticated/donations': typeof AuthenticatedDonationsRoute
+  '/_authenticated/hospitals': typeof AuthenticatedHospitalsRoute
+  '/_authenticated/patients': typeof AuthenticatedPatientsRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/transfers': typeof AuthenticatedTransfersRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
     | '/audit-log'
     | '/campaigns'
     | '/causes'
@@ -121,9 +120,9 @@ export interface FileRouteTypes {
     | '/profile'
     | '/settings'
     | '/transfers'
+    | '/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/audit-log'
     | '/campaigns'
     | '/causes'
@@ -133,119 +132,120 @@ export interface FileRouteTypes {
     | '/profile'
     | '/settings'
     | '/transfers'
+    | '/'
   id:
     | '__root__'
-    | '/'
-    | '/audit-log'
-    | '/campaigns'
-    | '/causes'
-    | '/donations'
-    | '/hospitals'
-    | '/patients'
-    | '/profile'
-    | '/settings'
-    | '/transfers'
+    | '/_authenticated/audit-log'
+    | '/_authenticated/campaigns'
+    | '/_authenticated/causes'
+    | '/_authenticated/donations'
+    | '/_authenticated/hospitals'
+    | '/_authenticated/patients'
+    | '/_authenticated/profile'
+    | '/_authenticated/settings'
+    | '/_authenticated/transfers'
+    | '/_authenticated/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AuditLogRoute: typeof AuditLogRoute
-  CampaignsRoute: typeof CampaignsRoute
-  CausesRoute: typeof CausesRoute
-  DonationsRoute: typeof DonationsRoute
-  HospitalsRoute: typeof HospitalsRoute
-  PatientsRoute: typeof PatientsRoute
-  ProfileRoute: typeof ProfileRoute
-  SettingsRoute: typeof SettingsRoute
-  TransfersRoute: typeof TransfersRoute
+  AuthenticatedAuditLogRoute: typeof AuthenticatedAuditLogRoute
+  AuthenticatedCampaignsRoute: typeof AuthenticatedCampaignsRoute
+  AuthenticatedCausesRoute: typeof AuthenticatedCausesRoute
+  AuthenticatedDonationsRoute: typeof AuthenticatedDonationsRoute
+  AuthenticatedHospitalsRoute: typeof AuthenticatedHospitalsRoute
+  AuthenticatedPatientsRoute: typeof AuthenticatedPatientsRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedTransfersRoute: typeof AuthenticatedTransfersRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/audit-log': {
-      id: '/audit-log'
+    '/_authenticated/audit-log': {
+      id: '/_authenticated/audit-log'
       path: '/audit-log'
       fullPath: '/audit-log'
-      preLoaderRoute: typeof AuditLogRouteImport
+      preLoaderRoute: typeof AuthenticatedAuditLogRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/campaigns': {
-      id: '/campaigns'
+    '/_authenticated/campaigns': {
+      id: '/_authenticated/campaigns'
       path: '/campaigns'
       fullPath: '/campaigns'
-      preLoaderRoute: typeof CampaignsRouteImport
+      preLoaderRoute: typeof AuthenticatedCampaignsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/causes': {
-      id: '/causes'
+    '/_authenticated/causes': {
+      id: '/_authenticated/causes'
       path: '/causes'
       fullPath: '/causes'
-      preLoaderRoute: typeof CausesRouteImport
+      preLoaderRoute: typeof AuthenticatedCausesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/donations': {
-      id: '/donations'
+    '/_authenticated/donations': {
+      id: '/_authenticated/donations'
       path: '/donations'
       fullPath: '/donations'
-      preLoaderRoute: typeof DonationsRouteImport
+      preLoaderRoute: typeof AuthenticatedDonationsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/hospitals': {
-      id: '/hospitals'
+    '/_authenticated/hospitals': {
+      id: '/_authenticated/hospitals'
       path: '/hospitals'
       fullPath: '/hospitals'
-      preLoaderRoute: typeof HospitalsRouteImport
+      preLoaderRoute: typeof AuthenticatedHospitalsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/patients': {
-      id: '/patients'
+    '/_authenticated/patients': {
+      id: '/_authenticated/patients'
       path: '/patients'
       fullPath: '/patients'
-      preLoaderRoute: typeof PatientsRouteImport
+      preLoaderRoute: typeof AuthenticatedPatientsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/profile': {
-      id: '/profile'
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
       path: '/profile'
       fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/settings': {
-      id: '/settings'
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
       path: '/settings'
       fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/transfers': {
-      id: '/transfers'
+    '/_authenticated/transfers': {
+      id: '/_authenticated/transfers'
       path: '/transfers'
       fullPath: '/transfers'
-      preLoaderRoute: typeof TransfersRouteImport
+      preLoaderRoute: typeof AuthenticatedTransfersRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AuditLogRoute: AuditLogRoute,
-  CampaignsRoute: CampaignsRoute,
-  CausesRoute: CausesRoute,
-  DonationsRoute: DonationsRoute,
-  HospitalsRoute: HospitalsRoute,
-  PatientsRoute: PatientsRoute,
-  ProfileRoute: ProfileRoute,
-  SettingsRoute: SettingsRoute,
-  TransfersRoute: TransfersRoute,
+  AuthenticatedAuditLogRoute: AuthenticatedAuditLogRoute,
+  AuthenticatedCampaignsRoute: AuthenticatedCampaignsRoute,
+  AuthenticatedCausesRoute: AuthenticatedCausesRoute,
+  AuthenticatedDonationsRoute: AuthenticatedDonationsRoute,
+  AuthenticatedHospitalsRoute: AuthenticatedHospitalsRoute,
+  AuthenticatedPatientsRoute: AuthenticatedPatientsRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedTransfersRoute: AuthenticatedTransfersRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

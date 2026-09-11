@@ -33,7 +33,7 @@ import { Button } from "@/components/ui/button";
 import { usePortal } from "@/store/portal";
 import { naira, shortDate } from "@/lib/format";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Dashboard — FundEzer Admin Portal" },

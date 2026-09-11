@@ -22,7 +22,7 @@ import {
 import { usePortal } from "@/store/portal";
 import { naira, shortDate } from "@/lib/format";
 
-export const Route = createFileRoute("/donations")({
+export const Route = createFileRoute("/_authenticated/_authenticated/donations")({
   head: () => ({
     meta: [
       { title: "Donations — FundEzer Admin Portal" },
