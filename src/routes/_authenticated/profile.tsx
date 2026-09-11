@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { ROLE_LABELS, initialsOf, useAuth } from "@/hooks/useAuth";
+import { updateMyProfile } from "@/lib/auth.functions";
 import { toast } from "sonner";
 import {
   Field,
