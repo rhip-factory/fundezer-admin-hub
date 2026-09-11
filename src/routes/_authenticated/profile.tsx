@@ -90,46 +90,56 @@ function ProfilePage() {
             <LabeledInput label="Full name" error={errors["name"] ?? ""}>
               <Input value={name} onChange={(e) => setName(e.target.value)} />
             </LabeledInput>
-            <LabeledInput label="Email" error={errors["email"] ?? ""}>
-              <Input value={email} onChange={(e) => setEmail(e.target.value)} />
+            <LabeledInput label="Email" hint="Managed by your sign-in account.">
+              <Input value={accountEmail} readOnly className="bg-muted" />
             </LabeledInput>
             <LabeledInput label="Phone">
               <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
             </LabeledInput>
-            <LabeledInput label="Role" hint="Roles are assigned by a super admin.">
-              <Input value={CURRENT_ADMIN.role} readOnly className="bg-muted" />
+            <LabeledInput label="Role" hint="Roles are assigned by a platform administrator.">
+              <Input value={roleLabel} readOnly className="bg-muted" />
             </LabeledInput>
           </div>
           <div className="mt-5 flex justify-end gap-2">
             <Button
               variant="outline"
               onClick={() => {
-                setName(CURRENT_ADMIN.name);
-                setEmail(CURRENT_ADMIN.email);
+                setName(accountName);
+                setPhone(identity?.profile.phone ?? "");
                 setErrors({});
               }}
             >
               Reset
             </Button>
-            <Button onClick={save}>Save changes</Button>
+            <Button onClick={() => void save()} disabled={saving}>
+              {saving ? "Saving…" : "Save changes"}
+            </Button>
           </div>
         </SectionCard>
 
         <SectionCard title="Access">
           <div className="flex items-center gap-3">
             <span className="grid size-12 shrink-0 place-items-center rounded-full bg-primary text-base font-semibold text-primary-foreground">
-              {CURRENT_ADMIN.initials}
+              {initialsOf(accountName || accountEmail)}
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-foreground">{name}</p>
-              <p className="truncate text-xs text-muted-foreground">{email}</p>
+              <p className="truncate text-xs text-muted-foreground">{accountEmail}</p>
             </div>
           </div>
           <div className="mt-5">
             <FieldGrid>
-              <Field label="Role" value={<StatusBadge status="Active" tone="brand" />} />
-              <Field label="Permission set" value={CURRENT_ADMIN.role} />
-              <Field label="Two-factor" value="Enabled (authenticator app)" className="sm:col-span-2" />
+              <Field
+                label="Account status"
+                value={
+                  <StatusBadge
+                    status={identity?.profile.status === "active" ? "Active" : "Inactive"}
+                    tone="brand"
+                  />
+                }
+              />
+              <Field label="Permission set" value={roleLabel} />
+              <Field label="Signed-in user ID" value={identity?.userId ?? "—"} className="sm:col-span-2" />
             </FieldGrid>
           </div>
         </SectionCard>
