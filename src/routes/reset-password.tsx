@@ -8,6 +8,7 @@ import { LabeledInput } from "@/components/admin/primitives";
 import logo from "@/assets/fundezer-logo.png.asset.json";
 
 export const Route = createFileRoute("/reset-password")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Set a new password — FundEzer Admin Portal" },
