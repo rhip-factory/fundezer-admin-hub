@@ -238,13 +238,6 @@ export type Database = {
             referencedRelation: "campaigns"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "campaign_updates_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
-            referencedColumns: ["id"]
-          },
         ]
       }
       campaigns: {
@@ -424,13 +417,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "consents_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "consents_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
@@ -510,13 +496,6 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "documents_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
             referencedColumns: ["id"]
           },
           {
@@ -609,13 +588,6 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "donations_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
             referencedColumns: ["id"]
           },
           {
@@ -1081,13 +1053,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "recurring_plans_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "recurring_plans_cause_id_fkey"
             columns: ["cause_id"]
             isOneToOne: false
@@ -1244,13 +1209,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "transfers_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "transfers_originating_hospital_id_fkey"
             columns: ["originating_hospital_id"]
             isOneToOne: false
@@ -1332,13 +1290,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "treatment_journeys_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "treatment_journeys_hospital_id_fkey"
             columns: ["hospital_id"]
             isOneToOne: false
@@ -1412,13 +1363,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "treatment_updates_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "treatment_updates_hospital_id_fkey"
             columns: ["hospital_id"]
             isOneToOne: false
@@ -1474,22 +1418,7 @@ export type Database = {
           title: string | null
           updated_at: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "campaign_updates_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "campaign_updates_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       public_campaigns: {
         Row: {
@@ -1506,53 +1435,39 @@ export type Database = {
           target: number | null
           updated_at: string | null
         }
-        Insert: {
-          cause_id?: string | null
-          created_at?: string | null
-          hospital_id?: string | null
-          id?: string | null
-          public_image_url?: string | null
-          public_story?: string | null
-          public_title?: string | null
-          published_at?: string | null
-          slug?: string | null
-          status?: Database["public"]["Enums"]["campaign_status"] | null
-          target?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          cause_id?: string | null
-          created_at?: string | null
-          hospital_id?: string | null
-          id?: string | null
-          public_image_url?: string | null
-          public_story?: string | null
-          public_title?: string | null
-          published_at?: string | null
-          slug?: string | null
-          status?: Database["public"]["Enums"]["campaign_status"] | null
-          target?: number | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "campaigns_cause_id_fkey"
-            columns: ["cause_id"]
-            isOneToOne: false
-            referencedRelation: "causes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "campaigns_hospital_id_fkey"
-            columns: ["hospital_id"]
-            isOneToOne: false
-            referencedRelation: "hospitals"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
+      get_public_campaign_updates: {
+        Args: never
+        Returns: {
+          campaign_id: string
+          content: string
+          created_at: string
+          id: string
+          published_at: string
+          title: string
+          updated_at: string
+        }[]
+      }
+      get_public_campaigns: {
+        Args: never
+        Returns: {
+          cause_id: string
+          created_at: string
+          hospital_id: string
+          id: string
+          public_image_url: string
+          public_story: string
+          public_title: string
+          published_at: string
+          slug: string
+          status: Database["public"]["Enums"]["campaign_status"]
+          target: number
+          updated_at: string
+        }[]
+      }
       has_hospital_role: {
         Args: {
           _hospital_id: string
