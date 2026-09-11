@@ -1408,20 +1408,38 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_campaign_updates: {
+        Row: {
+          campaign_id: string | null
+          content: string | null
+          created_at: string | null
+          id: string | null
+          published_at: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
+      public_campaigns: {
+        Row: {
+          cause_id: string | null
+          created_at: string | null
+          hospital_id: string | null
+          id: string | null
+          public_image_url: string | null
+          public_story: string | null
+          public_title: string | null
+          published_at: string | null
+          slug: string | null
+          status: Database["public"]["Enums"]["campaign_status"] | null
+          target: number | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      is_hospital_member: {
-        Args: { _hospital_id: string; _user_id: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       account_status: "active" | "inactive" | "suspended"
