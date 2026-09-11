@@ -26,7 +26,7 @@ import { usePortal, TRANSFER_FLOW } from "@/store/portal";
 import { dateTime, shortDate } from "@/lib/format";
 import type { TransferStatus } from "@/data/fundezer";
 
-export const Route = createFileRoute("/transfers")({
+export const Route = createFileRoute("/_authenticated/transfers")({
   head: () => ({
     meta: [
       { title: "Hospital Transfers — FundEzer Admin Portal" },

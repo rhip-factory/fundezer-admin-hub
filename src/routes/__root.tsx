@@ -13,7 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { PortalProvider } from "@/store/portal";
-import { AdminShell } from "@/components/admin/AdminShell";
+import { AuthProvider } from "@/hooks/useAuth";
 
 function NotFoundComponent() {
   return (
@@ -126,13 +126,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <PortalProvider>
-        <AdminShell>
+      <AuthProvider>
+        <PortalProvider>
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
-        </AdminShell>
-        <Toaster position="top-right" richColors />
-      </PortalProvider>
+          <Toaster position="top-right" richColors />
+        </PortalProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

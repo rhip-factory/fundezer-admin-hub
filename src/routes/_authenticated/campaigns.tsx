@@ -24,7 +24,7 @@ import { usePortal } from "@/store/portal";
 import { naira, shortDate } from "@/lib/format";
 import type { CampaignStatus } from "@/data/fundezer";
 
-export const Route = createFileRoute("/campaigns")({
+export const Route = createFileRoute("/_authenticated/campaigns")({
   head: () => ({
     meta: [
       { title: "Campaigns — FundEzer Admin Portal" },

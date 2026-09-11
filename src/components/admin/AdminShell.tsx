@@ -1,5 +1,8 @@
 import { useState, type ReactNode } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { ROLE_LABELS, initialsOf, useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard,
   Users,
@@ -19,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import logo from "@/assets/fundezer-logo.png.asset.json";
-import { CURRENT_ADMIN, usePortal } from "@/store/portal";
+import { usePortal } from "@/store/portal";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -75,6 +78,23 @@ function NavList({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
 }
 
 function SidebarBody({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { identity, session } = useAuth();
+  const name = identity?.profile.full_name ?? session?.user.email ?? "Signed in";
+  const roleLabel = identity?.roles.length
+    ? (ROLE_LABELS[identity.roles[0] as string] ?? identity.roles[0])
+    : "No role assigned";
+
+  const signOut = async () => {
+    onNavigate?.();
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    toast.success("Signed out");
+    await navigate({ to: "/auth", replace: true });
+  };
+
   return (
     <div className="flex h-full flex-col bg-sidebar">
       <div className="px-5 py-5">
@@ -95,15 +115,13 @@ function SidebarBody({ onNavigate }: { onNavigate?: (() => void) | undefined }) 
           className="mb-1 flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-sidebar-accent"
         >
           <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-            {CURRENT_ADMIN.initials}
+            {initialsOf(name)}
           </span>
           <span className="min-w-0">
             <span className="block truncate text-sm font-medium text-sidebar-foreground">
-              {CURRENT_ADMIN.name}
+              {name}
             </span>
-            <span className="block truncate text-xs text-muted-foreground">
-              {CURRENT_ADMIN.role}
-            </span>
+            <span className="block truncate text-xs text-muted-foreground">{roleLabel}</span>
           </span>
         </Link>
         <Link
@@ -116,10 +134,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: (() => void) | undefined }) 
         </Link>
         <button
           type="button"
-          onClick={() => {
-            onNavigate?.();
-            toast.success("Signed out", { description: "Prototype session ended." });
-          }}
+          onClick={() => void signOut()}
           className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-danger-soft hover:text-destructive"
         >
           <LogOut className="size-4" />

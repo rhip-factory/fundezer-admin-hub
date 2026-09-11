@@ -21,7 +21,7 @@ import { usePortal } from "@/store/portal";
 import { shortDate } from "@/lib/format";
 import { Check, Circle } from "lucide-react";
 
-export const Route = createFileRoute("/patients")({
+export const Route = createFileRoute("/_authenticated/patients")({
   head: () => ({
     meta: [
       { title: "Patients — FundEzer Admin Portal" },
