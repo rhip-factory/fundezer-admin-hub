@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import {
   ConfirmDialog,
   EmptyState,
@@ -32,8 +35,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { usePortal } from "@/store/portal";
-import { causeImageOptions, type Cause } from "@/data/fundezer";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  createCause as createCauseFn,
+  listCauses,
+  setCauseStatus as setCauseStatusFn,
+  updateCause as updateCauseFn,
+  type CauseRecord,
+} from "@/lib/causes.functions";
+import { causeImageOptions } from "@/data/fundezer";
 import { naira, shortDate } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/causes")({
@@ -72,14 +82,66 @@ const emptyDraft: Draft = {
 };
 
 function CausesPage() {
-  const { causes, patients, createCause, updateCause, setCauseStatus } = usePortal();
+  const queryClient = useQueryClient();
+  const fetchCauses = useServerFn(listCauses);
+  const createFn = useServerFn(createCauseFn);
+  const updateFn = useServerFn(updateCauseFn);
+  const statusFn = useServerFn(setCauseStatusFn);
+
+  const causesQuery = useQuery({
+    queryKey: ["causes"],
+    queryFn: () => fetchCauses(),
+  });
+  const causes = causesQuery.data ?? [];
+
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ["causes"] });
+  const failed = (error: unknown) =>
+    toast.error("Could not save cause", {
+      description: error instanceof Error ? error.message : "Please try again.",
+    });
+
+  const createMutation = useMutation({
+    mutationFn: (draft: Draft) => createFn({ data: draft }),
+    onSuccess: async (cause) => {
+      await refresh();
+      setOpen(false);
+      toast.success("Cause created", { description: `${cause.name} has been added.` });
+    },
+    onError: failed,
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (input: Draft & { id: string }) => updateFn({ data: input }),
+    onSuccess: async (cause) => {
+      await refresh();
+      setOpen(false);
+      toast.success("Cause updated", { description: `${cause.name} has been saved.` });
+    },
+    onError: failed,
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: (input: { id: string; status: "Active" | "Inactive" }) => statusFn({ data: input }),
+    onSuccess: async (cause) => {
+      await refresh();
+      toast.success(cause.status === "Active" ? "Cause activated" : "Cause deactivated", {
+        description: `${cause.name} is now ${cause.status.toLowerCase()}.`,
+      });
+    },
+    onError: (error) =>
+      toast.error("Could not update status", {
+        description: error instanceof Error ? error.message : "Please try again.",
+      }),
+  });
+
+  const saving = createMutation.isPending || updateMutation.isPending;
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
-  const [editing, setEditing] = useState<Cause | null>(null);
+  const [editing, setEditing] = useState<CauseRecord | null>(null);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [toggling, setToggling] = useState<Cause | null>(null);
+  const [toggling, setToggling] = useState<CauseRecord | null>(null);
 
   const rows = useMemo(
     () =>
@@ -100,7 +162,7 @@ function CausesPage() {
     setOpen(true);
   };
 
-  const startEdit = (c: Cause) => {
+  const startEdit = (c: CauseRecord) => {
     setEditing(c);
     setDraft({
       name: c.name,
@@ -123,9 +185,8 @@ function CausesPage() {
     setErrors(next);
     if (Object.keys(next).length > 0) return;
 
-    if (editing) updateCause(editing.id, draft);
-    else createCause(draft);
-    setOpen(false);
+    if (editing) updateMutation.mutate({ ...draft, id: editing.id });
+    else createMutation.mutate(draft);
   };
 
   return (
@@ -154,7 +215,19 @@ function CausesPage() {
           </span>
         </FilterBar>
 
-        {rows.length === 0 ? (
+        {causesQuery.isLoading ? (
+          <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-64 w-full rounded-xl" />
+            ))}
+          </div>
+        ) : causesQuery.isError ? (
+          <EmptyState
+            title="Could not load causes"
+            description="Something went wrong while loading causes from the database."
+            action={<Button onClick={() => causesQuery.refetch()}>Try again</Button>}
+          />
+        ) : rows.length === 0 ? (
           <EmptyState
             searching
             title="No causes found"
@@ -164,14 +237,14 @@ function CausesPage() {
         ) : (
           <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
             {rows.map((c) => {
-              const supported = patients.filter((p) => p.causeId === c.id).length;
+              const supported = c.patientsSupported;
               return (
                 <Card key={c.id} className="gap-0 border-border p-4 shadow-card">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <h3 className="truncate text-sm font-semibold text-foreground">{c.name}</h3>
                       <p className="num text-xs text-muted-foreground">
-                        {c.id} · updated {shortDate(c.lastUpdated)}
+                        CAU-{c.id.slice(0, 6).toUpperCase()} · updated {shortDate(c.lastUpdated)}
                       </p>
                     </div>
                     <StatusBadge status={c.status} />
@@ -194,7 +267,7 @@ function CausesPage() {
                     <div>
                       <dt className="text-xs text-muted-foreground">Patients</dt>
                       <dd className="text-sm font-medium text-foreground">
-                        {supported || c.patientsSupported}
+                        {supported}
                       </dd>
                     </div>
                   </dl>
@@ -207,6 +280,7 @@ function CausesPage() {
                       size="sm"
                       className="flex-1"
                       onClick={() => setToggling(c)}
+                      disabled={statusMutation.isPending}
                     >
                       {c.status === "Active" ? "Deactivate" : "Activate"}
                     </Button>
@@ -294,7 +368,9 @@ function CausesPage() {
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={submit}>{editing ? "Save changes" : "Create cause"}</Button>
+            <Button onClick={submit} disabled={saving}>
+              {saving ? "Saving…" : editing ? "Save changes" : "Create cause"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -311,7 +387,11 @@ function CausesPage() {
         confirmLabel={toggling?.status === "Active" ? "Deactivate" : "Activate"}
         destructive={toggling?.status === "Active"}
         onConfirm={() => {
-          if (toggling) setCauseStatus(toggling.id, toggling.status === "Active" ? "Inactive" : "Active");
+          if (toggling)
+            statusMutation.mutate({
+              id: toggling.id,
+              status: toggling.status === "Active" ? "Inactive" : "Active",
+            });
           setToggling(null);
         }}
       />
