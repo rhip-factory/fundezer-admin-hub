@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import logo from "@/assets/fundezer-logo.png.asset.json";
-import { CURRENT_ADMIN, usePortal } from "@/store/portal";
+import { usePortal } from "@/store/portal";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
