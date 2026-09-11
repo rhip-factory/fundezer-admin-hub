@@ -134,10 +134,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: (() => void) | undefined }) 
         </Link>
         <button
           type="button"
-          onClick={() => {
-            onNavigate?.();
-            toast.success("Signed out", { description: "Prototype session ended." });
-          }}
+          onClick={() => void signOut()}
           className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-danger-soft hover:text-destructive"
         >
           <LogOut className="size-4" />
