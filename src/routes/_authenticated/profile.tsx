@@ -17,7 +17,7 @@ import {
 } from "@/components/admin/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CURRENT_ADMIN, usePortal } from "@/store/portal";
+import { usePortal } from "@/store/portal";
 import { dateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/profile")({
