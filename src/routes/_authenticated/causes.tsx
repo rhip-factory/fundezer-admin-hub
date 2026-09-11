@@ -36,7 +36,7 @@ import { usePortal } from "@/store/portal";
 import { causeImageOptions, type Cause } from "@/data/fundezer";
 import { naira, shortDate } from "@/lib/format";
 
-export const Route = createFileRoute("/_authenticated/_authenticated/causes")({
+export const Route = createFileRoute("/_authenticated/causes")({
   head: () => ({
     meta: [
       { title: "Causes — FundEzer Admin Portal" },

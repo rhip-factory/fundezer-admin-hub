@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { CURRENT_ADMIN, usePortal } from "@/store/portal";
 import { dateTime } from "@/lib/format";
 
-export const Route = createFileRoute("/_authenticated/_authenticated/profile")({
+export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
       { title: "Admin Profile — FundEzer Admin Portal" },
