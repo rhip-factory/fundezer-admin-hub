@@ -75,6 +75,23 @@ function NavList({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
 }
 
 function SidebarBody({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { identity, session } = useAuth();
+  const name = identity?.profile.full_name ?? session?.user.email ?? "Signed in";
+  const roleLabel = identity?.roles.length
+    ? (ROLE_LABELS[identity.roles[0] as string] ?? identity.roles[0])
+    : "No role assigned";
+
+  const signOut = async () => {
+    onNavigate?.();
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    toast.success("Signed out");
+    await navigate({ to: "/auth", replace: true });
+  };
+
   return (
     <div className="flex h-full flex-col bg-sidebar">
       <div className="px-5 py-5">
