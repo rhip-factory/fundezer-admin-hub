@@ -1439,67 +1439,7 @@ export type Database = {
       }
     }
     Functions: {
-      get_public_campaign_updates: {
-        Args: never
-        Returns: {
-          campaign_id: string
-          content: string
-          created_at: string
-          id: string
-          published_at: string
-          title: string
-          updated_at: string
-        }[]
-      }
-      get_public_campaigns: {
-        Args: never
-        Returns: {
-          cause_id: string
-          created_at: string
-          hospital_id: string
-          id: string
-          public_image_url: string
-          public_story: string
-          public_title: string
-          published_at: string
-          slug: string
-          status: Database["public"]["Enums"]["campaign_status"]
-          target: number
-          updated_at: string
-        }[]
-      }
-      has_hospital_role: {
-        Args: {
-          _hospital_id: string
-          _roles: Database["public"]["Enums"]["app_role"][]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      hospital_can_access_patient: {
-        Args: {
-          _patient_id: string
-          _roles: Database["public"]["Enums"]["app_role"][]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      is_admin: { Args: { _user_id?: string }; Returns: boolean }
-      is_hospital_member: {
-        Args: { _hospital_id: string; _user_id: string }
-        Returns: boolean
-      }
-      owns_patient: {
-        Args: { _patient_id: string; _user_id: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       account_status: "active" | "inactive" | "suspended"
