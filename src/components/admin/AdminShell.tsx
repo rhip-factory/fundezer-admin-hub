@@ -6,6 +6,7 @@ import { ROLE_LABELS, initialsOf, useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard,
   Users,
+  ClipboardList,
   Building2,
   HeartHandshake,
   ArrowLeftRight,
@@ -27,6 +28,7 @@ import { usePortal } from "@/store/portal";
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/patients", label: "Patients", icon: Users },
+  { to: "/applications", label: "Applications", icon: ClipboardList },
   { to: "/hospitals", label: "Hospitals", icon: Building2 },
   { to: "/causes", label: "Causes", icon: HeartHandshake },
   { to: "/transfers", label: "Hospital Transfers", icon: ArrowLeftRight },
