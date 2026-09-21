@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   EmptyState,
   FilterBar,
@@ -12,7 +14,9 @@ import {
   Th,
   Tr,
 } from "@/components/admin/primitives";
-import { usePortal } from "@/store/portal";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { listAuditLogs } from "@/lib/audit.functions";
 import { dateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/audit-log")({
@@ -35,14 +39,14 @@ export const Route = createFileRoute("/_authenticated/audit-log")({
 });
 
 function AuditPage() {
-  const { audit } = usePortal();
+  const fetchAudit = useServerFn(listAuditLogs);
+  const auditQuery = useQuery({ queryKey: ["audit"], queryFn: () => fetchAudit() });
+  const audit = auditQuery.data ?? [];
+
   const [query, setQuery] = useState("");
   const [recordType, setRecordType] = useState("all");
 
-  const types = useMemo(
-    () => Array.from(new Set(audit.map((a) => a.recordType))).sort(),
-    [audit],
-  );
+  const types = useMemo(() => Array.from(new Set(audit.map((a) => a.recordType))).sort(), [audit]);
 
   const rows = useMemo(
     () =>
@@ -78,7 +82,19 @@ function AuditPage() {
           </span>
         </FilterBar>
 
-        {rows.length === 0 ? (
+        {auditQuery.isLoading ? (
+          <div className="space-y-3 p-5">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-12 w-full rounded-md" />
+            ))}
+          </div>
+        ) : auditQuery.isError ? (
+          <EmptyState
+            title="Could not load the audit log"
+            description="Something went wrong while loading audit records."
+            action={<Button onClick={() => auditQuery.refetch()}>Try again</Button>}
+          />
+        ) : rows.length === 0 ? (
           <EmptyState
             searching
             title="No audit entries match"
