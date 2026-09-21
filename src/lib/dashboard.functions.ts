@@ -161,6 +161,7 @@ export const getDashboard = createServerFn({ method: "POST" })
       pendingTransfers: (transfers ?? []).filter((t: any) => OPEN.includes(t.status)).length,
       recurringDonors: (plans ?? []).filter((p: any) => p.status === "Active").length,
       series: buckets,
+      topCauses,
       recentDonations: allDonations.slice(0, 6).map(
         (d: any): DashboardDonation => ({
           id: d.id,
