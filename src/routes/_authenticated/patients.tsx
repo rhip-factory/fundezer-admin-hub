@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   DetailDrawer,
   DrawerSection,
@@ -17,7 +19,9 @@ import {
   Th,
   Tr,
 } from "@/components/admin/primitives";
-import { usePortal } from "@/store/portal";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { listPatients } from "@/lib/patients.functions";
 import { shortDate } from "@/lib/format";
 import { Check, Circle } from "lucide-react";
 
@@ -40,14 +44,23 @@ export const Route = createFileRoute("/_authenticated/patients")({
   component: PatientsPage,
 });
 
+const STATUSES = ["Active", "Under Treatment", "Transferred", "Recovered", "Closed"];
+
 function PatientsPage() {
-  const { patients, hospital, cause, campaign } = usePortal();
+  const fetchPatients = useServerFn(listPatients);
+  const patientsQuery = useQuery({ queryKey: ["patients"], queryFn: () => fetchPatients() });
+  const patients = patientsQuery.data ?? [];
+
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
   const [causeFilter, setCauseFilter] = useState("all");
   const [selected, setSelected] = useState<string | null>(null);
 
-  const { causes } = usePortal();
+  const causeOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of patients) if (p.causeId) map.set(p.causeId, p.causeName);
+    return [...map].map(([value, label]) => ({ value, label }));
+  }, [patients]);
 
   const rows = useMemo(
     () =>
@@ -55,9 +68,7 @@ function PatientsPage() {
         const q = query.trim().toLowerCase();
         const matchQ =
           !q ||
-          [p.displayName, p.reference, p.treatment, p.id].some((v) =>
-            v.toLowerCase().includes(q),
-          );
+          [p.displayName, p.reference, p.condition].some((v) => v.toLowerCase().includes(q));
         return (
           matchQ &&
           (status === "all" || p.status === status) &&
@@ -87,26 +98,32 @@ function PatientsPage() {
             label="Status"
             value={status}
             onChange={setStatus}
-            options={[
-              "Active",
-              "Treatment in Progress",
-              "Awaiting Treatment",
-              "Completed",
-              "Transferred",
-            ].map((v) => ({ value: v, label: v }))}
+            options={STATUSES.map((v) => ({ value: v, label: v }))}
           />
           <FilterSelect
             label="Cause"
             value={causeFilter}
             onChange={setCauseFilter}
-            options={causes.map((c) => ({ value: c.id, label: c.name }))}
+            options={causeOptions}
           />
           <span className="num ml-auto text-xs text-muted-foreground">
             {rows.length} of {patients.length}
           </span>
         </FilterBar>
 
-        {rows.length === 0 ? (
+        {patientsQuery.isLoading ? (
+          <div className="space-y-3 p-5">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-12 w-full rounded-md" />
+            ))}
+          </div>
+        ) : patientsQuery.isError ? (
+          <EmptyState
+            title="Could not load patients"
+            description="Something went wrong while loading patient records."
+            action={<Button onClick={() => patientsQuery.refetch()}>Try again</Button>}
+          />
+        ) : rows.length === 0 ? (
           <EmptyState
             searching
             title="No patients match your filters"
@@ -130,8 +147,8 @@ function PatientsPage() {
                 <Tr key={p.id} onClick={() => setSelected(p.id)}>
                   <Td className="font-medium">{p.displayName}</Td>
                   <Td className="num text-muted-foreground">{p.reference}</Td>
-                  <Td className="max-w-[16rem] truncate">{hospital(p.hospitalId)?.name}</Td>
-                  <Td>{cause(p.causeId)?.name}</Td>
+                  <Td className="max-w-[16rem] truncate">{p.hospitalName}</Td>
+                  <Td>{p.causeName}</Td>
                   <Td className="text-muted-foreground">{p.treatmentStage}</Td>
                   <Td>
                     <StatusBadge status={p.status} />
@@ -148,7 +165,7 @@ function PatientsPage() {
         open={!!active}
         onOpenChange={(o) => !o && setSelected(null)}
         title={active?.displayName ?? ""}
-        subtitle={active ? `${active.reference} · ${active.treatment}` : ""}
+        subtitle={active ? `${active.reference} · ${active.condition}` : ""}
       >
         {active ? (
           <>
@@ -156,73 +173,89 @@ function PatientsPage() {
               <FieldGrid>
                 <Field label="Age band" value={active.ageBand} />
                 <Field label="Gender" value={active.gender} />
-                <Field label="Hospital" value={hospital(active.hospitalId)?.name ?? "—"} />
-                <Field label="Cause" value={cause(active.causeId)?.name ?? "—"} />
+                <Field label="Hospital" value={active.hospitalName} />
+                <Field label="Cause" value={active.causeName} />
                 <Field label="Treatment stage" value={active.treatmentStage} />
                 <Field label="Status" value={<StatusBadge status={active.status} />} />
+                <Field label="Urgency" value={<StatusBadge status={active.urgency} />} />
+                <Field label="Campaign" value={active.campaignTitle} />
                 <Field
-                  label="Campaign"
-                  value={campaign(active.campaignId)?.title ?? active.campaignId}
+                  label="Medical summary"
+                  value={active.medicalSummary || "—"}
+                  className="sm:col-span-2"
                 />
-                <Field label="Guardian" value={active.guardianRef} />
               </FieldGrid>
             </DrawerSection>
 
             <DrawerSection title="Treatment journey">
-              <ol className="space-y-3">
-                {active.journey.map((j) => (
-                  <li key={j.stage} className="flex items-start gap-3">
-                    <span
-                      className={
-                        j.done
-                          ? "mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-success-soft text-success"
-                          : "mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"
-                      }
-                    >
-                      {j.done ? <Check className="size-3" /> : <Circle className="size-2" />}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">{j.stage}</p>
-                      <p className="num text-xs text-muted-foreground">{shortDate(j.date)}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
+              {active.journey.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No journey stages recorded yet.</p>
+              ) : (
+                <ol className="space-y-3">
+                  {active.journey.map((j, i) => (
+                    <li key={`${j.stage}-${i}`} className="flex items-start gap-3">
+                      <span
+                        className={
+                          j.done
+                            ? "mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-success-soft text-success"
+                            : "mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"
+                        }
+                      >
+                        {j.done ? <Check className="size-3" /> : <Circle className="size-2" />}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground">{j.stage}</p>
+                        <p className="num text-xs text-muted-foreground">
+                          {j.date ? shortDate(j.date) : j.status}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              )}
             </DrawerSection>
 
             <DrawerSection title="Clinical updates">
-              <div className="space-y-3">
-                {active.updates.map((u) => (
-                  <div key={u.date + u.note} className="rounded-md border border-border p-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium text-foreground">{u.author}</p>
-                      <p className="num text-xs text-muted-foreground">{shortDate(u.date)}</p>
+              {active.updates.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No clinical updates recorded.</p>
+              ) : (
+                <div className="space-y-3">
+                  {active.updates.map((u) => (
+                    <div key={u.id} className="rounded-md border border-border p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-foreground">{u.author}</p>
+                        <p className="num text-xs text-muted-foreground">{shortDate(u.date)}</p>
+                      </div>
+                      <p className="mt-1 text-sm text-muted-foreground">{u.note}</p>
                     </div>
-                    <p className="mt-1 text-sm text-muted-foreground">{u.note}</p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </DrawerSection>
 
             <DrawerSection title="Hospital history">
-              <div className="space-y-2">
-                {active.hospitalHistory.map((h, i) => (
-                  <div
-                    key={`${h.hospitalId}-${i}`}
-                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-border px-3 py-2"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {hospital(h.hospitalId)?.name ?? h.hospitalId}
+              {active.hospitalHistory.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No hospital history recorded.</p>
+              ) : (
+                <div className="space-y-2">
+                  {active.hospitalHistory.map((h) => (
+                    <div
+                      key={h.id}
+                      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-border px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {h.hospitalName}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">{h.reason}</p>
+                      </div>
+                      <p className="num text-xs whitespace-nowrap text-muted-foreground">
+                        {shortDate(h.from)} — {h.to ? shortDate(h.to) : "present"}
                       </p>
-                      <p className="truncate text-xs text-muted-foreground">{h.reason}</p>
                     </div>
-                    <p className="num text-xs whitespace-nowrap text-muted-foreground">
-                      {shortDate(h.from)} — {h.to ? shortDate(h.to) : "present"}
-                    </p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </DrawerSection>
           </>
         ) : null}
