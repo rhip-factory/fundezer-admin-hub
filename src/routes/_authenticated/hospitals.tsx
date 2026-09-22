@@ -90,8 +90,19 @@ function HospitalsPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const createMutation = useMutation({
-    mutationFn: (input: Parameters<typeof createHospital>[0]["data"]) =>
-      addHospital({ data: input }),
+    mutationFn: (input: {
+      name: string;
+      city: string;
+      state: string;
+      contactRole: string;
+      email: string;
+      phone: string;
+      beds: number;
+      accreditation: string;
+      verification: "Verified" | "Pending" | "Suspended";
+      status: "active" | "inactive" | "suspended";
+      serviceIds: string[];
+    }) => addHospital({ data: input }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["hospitals"] });
       await queryClient.invalidateQueries({ queryKey: ["audit"] });
