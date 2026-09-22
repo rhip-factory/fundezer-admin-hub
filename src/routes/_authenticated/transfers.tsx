@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Check, X } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import {
   ConfirmDialog,
   DetailDrawer,
@@ -21,10 +24,17 @@ import {
 } from "@/components/admin/primitives";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { usePortal, TRANSFER_FLOW } from "@/store/portal";
+import {
+  TRANSFER_FLOW,
+  TRANSFER_STATUSES,
+  listTransferHospitals,
+  listTransfers,
+  setTransferStatus,
+  type TransferStatusValue,
+} from "@/lib/transfers.functions";
 import { dateTime, shortDate } from "@/lib/format";
-import type { TransferStatus } from "@/data/fundezer";
 
 export const Route = createFileRoute("/_authenticated/transfers")({
   head: () => ({
@@ -48,18 +58,18 @@ export const Route = createFileRoute("/_authenticated/transfers")({
 const OPEN_STATUSES = ["Submitted", "Under Review", "Receiving Hospital Pending"];
 
 function TransfersPage() {
-  const {
-    transfers,
-    patient,
-    hospital,
-    matchingHospitals,
-    reviewTransfer,
-    approveTransfer,
-    rejectTransfer,
-    requestInfo,
-    respondReceivingHospital,
-    advanceTransfer,
-  } = usePortal();
+  const fetchTransfers = useServerFn(listTransfers);
+  const fetchHospitals = useServerFn(listTransferHospitals);
+  const updateStatus = useServerFn(setTransferStatus);
+  const queryClient = useQueryClient();
+
+  const transfersQuery = useQuery({ queryKey: ["transfers"], queryFn: () => fetchTransfers() });
+  const hospitalsQuery = useQuery({
+    queryKey: ["transfer-hospitals"],
+    queryFn: () => fetchHospitals(),
+  });
+  const transfers = transfersQuery.data ?? [];
+  const hospitals = hospitalsQuery.data ?? [];
 
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
@@ -69,15 +79,37 @@ function TransfersPage() {
   const [choice, setChoice] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<null | "approve" | "reject" | "info" | "decline">(null);
 
+  const mutation = useMutation({
+    mutationFn: (input: {
+      id: string;
+      status: TransferStatusValue;
+      note?: string;
+      receivingHospitalId?: string | null;
+      actedByHospital?: boolean;
+    }) => updateStatus({ data: input }),
+    onSuccess: async (record) => {
+      await queryClient.invalidateQueries({ queryKey: ["transfers"] });
+      await queryClient.invalidateQueries({ queryKey: ["audit"] });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      setNote("");
+      toast.success(`Transfer ${record.status}`, {
+        description: `${record.reference} updated.`,
+      });
+    },
+    onError: (error: unknown) =>
+      toast.error("Could not update transfer", {
+        description: error instanceof Error ? error.message : "Please try again.",
+      }),
+  });
+
   const rows = useMemo(
     () =>
       transfers.filter((t) => {
         const q = query.trim().toLowerCase();
-        const p = patient(t.patientId);
         const matchQ =
           !q ||
-          [t.id, t.requiredService, p?.displayName ?? "", t.reason].some((v) =>
-            v.toLowerCase().includes(q),
+          [t.reference, t.serviceName, t.patientName, t.reason].some((v) =>
+            (v ?? "").toLowerCase().includes(q),
           );
         return (
           matchQ &&
@@ -86,16 +118,41 @@ function TransfersPage() {
           (urgency === "all" || t.urgency === urgency)
         );
       }),
-    [transfers, query, status, urgency, patient],
+    [transfers, query, status, urgency],
   );
 
   const active = transfers.find((t) => t.id === selected) ?? null;
-  const candidates = active ? matchingHospitals(active.requiredService, active.fromHospitalId) : [];
-  const receiving = active?.receivingHospitalId ? hospital(active.receivingHospitalId) : undefined;
+
+  const candidates = useMemo(() => {
+    if (!active) return [];
+    const order: Record<string, number> = {
+      Available: 0,
+      "Temporarily Unavailable": 1,
+      "Not Available": 2,
+    };
+    const list = hospitals
+      .filter((h) => h.id !== active.fromHospitalId && h.verification !== "Suspended")
+      .map((h) => ({
+        hospital: h,
+        status: (active.serviceId ? h.capabilities[active.serviceId] : undefined) ?? "Not Available",
+        recommended: false,
+      }));
+    list.sort((a, b) => {
+      const s = (order[a.status] ?? 3) - (order[b.status] ?? 3);
+      if (s !== 0) return s;
+      if (a.hospital.status !== b.hospital.status) return a.hospital.status === "active" ? -1 : 1;
+      return b.hospital.beds - a.hospital.beds;
+    });
+    const first = list.find((c) => c.status === "Available" && c.hospital.status === "active");
+    if (first) first.recommended = true;
+    return list;
+  }, [active, hospitals]);
+
+  const recommendedId = candidates.find((c) => c.recommended)?.hospital.id ?? null;
   const stageIndex = active ? TRANSFER_FLOW.indexOf(active.status) : -1;
-  const nextStage: TransferStatus | null =
+  const nextStage: TransferStatusValue | null =
     stageIndex >= 0 && stageIndex < TRANSFER_FLOW.length - 1
-      ? (TRANSFER_FLOW[stageIndex + 1] as TransferStatus)
+      ? (TRANSFER_FLOW[stageIndex + 1] as TransferStatusValue)
       : null;
 
   const close = () => {
@@ -104,10 +161,16 @@ function TransfersPage() {
     setChoice(null);
   };
 
+  const busy = mutation.isPending;
+
   const footer = active ? (
     <>
       {active.status === "Submitted" ? (
-        <Button variant="outline" onClick={() => reviewTransfer(active.id)}>
+        <Button
+          variant="outline"
+          disabled={busy}
+          onClick={() => mutation.mutate({ id: active.id, status: "Under Review" })}
+        >
           Move to review
         </Button>
       ) : null}
@@ -116,16 +179,16 @@ function TransfersPage() {
           <Button
             variant="outline"
             onClick={() => setConfirm("info")}
-            disabled={note.trim().length < 5}
+            disabled={busy || note.trim().length < 5}
           >
             Request info
           </Button>
-          <Button variant="ghost" onClick={() => setConfirm("reject")}>
+          <Button variant="ghost" disabled={busy} onClick={() => setConfirm("reject")}>
             Reject
           </Button>
           <Button
             onClick={() => setConfirm("approve")}
-            disabled={!(choice ?? active.recommendedHospitalId)}
+            disabled={busy || !(choice ?? recommendedId)}
           >
             Approve transfer
           </Button>
@@ -133,21 +196,38 @@ function TransfersPage() {
       ) : null}
       {active.status === "Receiving Hospital Pending" ? (
         <>
-          <Button variant="ghost" onClick={() => setConfirm("decline")}>
+          <Button variant="ghost" disabled={busy} onClick={() => setConfirm("decline")}>
             <X className="size-4" /> Hospital declines
           </Button>
           <Button
-            onClick={() => {
-              respondReceivingHospital(active.id, true, note || undefined);
-              setNote("");
-            }}
+            disabled={busy}
+            onClick={() =>
+              mutation.mutate({
+                id: active.id,
+                status: "Accepted",
+                ...(note.trim() ? { note: note.trim() } : {}),
+                actedByHospital: true,
+              })
+            }
           >
             <Check className="size-4" /> Hospital accepts
           </Button>
         </>
       ) : null}
       {nextStage ? (
-        <Button onClick={() => advanceTransfer(active.id, nextStage)}>Mark {nextStage}</Button>
+        <Button
+          disabled={busy}
+          onClick={() =>
+            mutation.mutate({
+              id: active.id,
+              status: nextStage,
+              actedByHospital:
+                nextStage === "Treatment Commenced" || nextStage === "Completed" ? true : false,
+            })
+          }
+        >
+          Mark {nextStage}
+        </Button>
       ) : null}
     </>
   ) : null;
@@ -168,36 +248,41 @@ function TransfersPage() {
             onChange={setStatus}
             options={[
               { value: "open", label: "Awaiting action" },
-              ...[
-                "Submitted",
-                "Under Review",
-                "Receiving Hospital Pending",
-                "Accepted",
-                "Patient Notified",
-                "Transfer Scheduled",
-                "Treatment Commenced",
-                "Completed",
-                "Rejected",
-                "Cancelled",
-              ].map((v) => ({ value: v, label: v })),
+              ...TRANSFER_STATUSES.map((v) => ({ value: v, label: v })),
             ]}
           />
           <FilterSelect
             label="Urgency"
             value={urgency}
             onChange={setUrgency}
-            options={["Routine", "Urgent", "Critical"].map((v) => ({ value: v, label: v }))}
+            options={["Low", "Medium", "High", "Critical"].map((v) => ({ value: v, label: v }))}
           />
           <span className="num ml-auto text-xs text-muted-foreground">
             {rows.length} of {transfers.length}
           </span>
         </FilterBar>
 
-        {rows.length === 0 ? (
+        {transfersQuery.isLoading ? (
+          <div className="space-y-3 p-5">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-12 w-full rounded-md" />
+            ))}
+          </div>
+        ) : transfersQuery.isError ? (
           <EmptyState
-            searching
-            title="No transfer requests match"
-            description="Adjust the status or urgency filter to see more requests."
+            title="Could not load transfers"
+            description="Something went wrong while loading transfer requests."
+            action={<Button onClick={() => transfersQuery.refetch()}>Try again</Button>}
+          />
+        ) : rows.length === 0 ? (
+          <EmptyState
+            searching={transfers.length > 0}
+            title={transfers.length === 0 ? "No transfer requests yet" : "No transfer requests match"}
+            description={
+              transfers.length === 0
+                ? "Transfer requests raised by partner hospitals will appear here."
+                : "Adjust the status or urgency filter to see more requests."
+            }
           />
         ) : (
           <TableShell>
@@ -219,22 +304,22 @@ function TransfersPage() {
                   onClick={() => {
                     setSelected(t.id);
                     setNote("");
-                    setChoice(t.recommendedHospitalId);
+                    setChoice(t.receivingHospitalId);
                   }}
                 >
-                  <Td className="num font-medium">{t.id}</Td>
-                  <Td className="max-w-[14rem] truncate">{patient(t.patientId)?.displayName}</Td>
+                  <Td className="num font-medium">{t.reference}</Td>
+                  <Td className="max-w-[14rem] truncate">{t.patientName}</Td>
                   <Td className="max-w-[16rem] truncate text-muted-foreground">
-                    {hospital(t.fromHospitalId)?.name}
+                    {t.fromHospitalName}
                   </Td>
-                  <Td>{t.requiredService}</Td>
+                  <Td>{t.serviceName}</Td>
                   <Td>
                     <StatusBadge status={t.urgency} />
                   </Td>
                   <Td>
                     <StatusBadge status={t.status} />
                   </Td>
-                  <Td className="num text-muted-foreground">{shortDate(t.date)}</Td>
+                  <Td className="num text-muted-foreground">{shortDate(t.requestedAt)}</Td>
                 </Tr>
               ))}
             </tbody>
@@ -245,28 +330,36 @@ function TransfersPage() {
       <DetailDrawer
         open={!!active}
         onOpenChange={(o) => !o && close()}
-        title={active ? `Transfer ${active.id}` : ""}
-        subtitle={
-          active ? `${patient(active.patientId)?.displayName} · ${active.requiredService}` : ""
-        }
+        title={active ? `Transfer ${active.reference}` : ""}
+        subtitle={active ? `${active.patientName} · ${active.serviceName}` : ""}
         footer={footer}
       >
         {active ? (
           <>
             <DrawerSection title="Request details">
               <FieldGrid>
-                <Field label="Patient" value={patient(active.patientId)?.displayName ?? "—"} />
-                <Field label="Campaign" value={<span className="num">{active.campaignId}</span>} />
-                <Field label="From hospital" value={hospital(active.fromHospitalId)?.name ?? "—"} />
-                <Field label="Required service" value={active.requiredService} />
+                <Field label="Patient" value={active.patientName} />
+                <Field label="Campaign" value={active.campaignTitle} />
+                <Field label="From hospital" value={active.fromHospitalName} />
+                <Field label="Required service" value={active.serviceName} />
                 <Field label="Urgency" value={<StatusBadge status={active.urgency} />} />
                 <Field label="Status" value={<StatusBadge status={active.status} />} />
                 <Field label="Treatment phase" value={active.treatmentPhase} />
-                <Field label="Requested" value={shortDate(active.date)} />
+                <Field label="Requested" value={shortDate(active.requestedAt)} />
                 <Field label="Reason" value={active.reason} className="sm:col-span-2" />
-                <Field label="Treatment plan" value={active.treatmentPlan} className="sm:col-span-2" />
-                {receiving ? (
-                  <Field label="Receiving hospital" value={receiving.name} className="sm:col-span-2" />
+                {active.adminDecision ? (
+                  <Field
+                    label="Latest admin note"
+                    value={active.adminDecision}
+                    className="sm:col-span-2"
+                  />
+                ) : null}
+                {active.receivingHospitalName ? (
+                  <Field
+                    label="Receiving hospital"
+                    value={active.receivingHospitalName}
+                    className="sm:col-span-2"
+                  />
                 ) : null}
               </FieldGrid>
             </DrawerSection>
@@ -275,7 +368,7 @@ function TransfersPage() {
               <DrawerSection title="Matching hospitals">
                 <div className="space-y-2">
                   {candidates.slice(0, 6).map((c) => {
-                    const picked = (choice ?? active.recommendedHospitalId) === c.hospital.id;
+                    const picked = (choice ?? recommendedId) === c.hospital.id;
                     return (
                       <button
                         key={c.hospital.id}
@@ -305,6 +398,11 @@ function TransfersPage() {
                       </button>
                     );
                   })}
+                  {candidates.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No other partner hospitals are available yet.
+                    </p>
+                  ) : null}
                 </div>
               </DrawerSection>
             ) : null}
@@ -350,18 +448,19 @@ function TransfersPage() {
 
             <DrawerSection title="Timeline">
               <div className="space-y-3">
-                {[...active.timeline].reverse().map((e, i) => (
-                  <div key={`${e.status}-${i}`} className="rounded-md border border-border p-3">
+                {[...active.timeline].reverse().map((e) => (
+                  <div key={e.id} className="rounded-md border border-border p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <StatusBadge status={e.status} />
                       <span className="num text-xs text-muted-foreground">{dateTime(e.at)}</span>
                     </div>
                     <p className="mt-2 text-sm text-foreground">{e.by}</p>
-                    {e.note ? (
-                      <p className="mt-1 text-sm text-muted-foreground">{e.note}</p>
-                    ) : null}
+                    {e.note ? <p className="mt-1 text-sm text-muted-foreground">{e.note}</p> : null}
                   </div>
                 ))}
+                {active.timeline.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No timeline events recorded yet.</p>
+                ) : null}
               </div>
             </DrawerSection>
           </>
@@ -372,10 +471,18 @@ function TransfersPage() {
         open={confirm === "approve"}
         onOpenChange={(o) => !o && setConfirm(null)}
         title="Approve transfer?"
-        description={`The receiving hospital will be asked to accept ${active ? patient(active.patientId)?.displayName : "the patient"}.`}
+        description={`The receiving hospital will be asked to accept ${active ? active.patientName : "the patient"}.`}
         confirmLabel="Approve"
         onConfirm={() => {
-          if (active) approveTransfer(active.id, choice ?? active.recommendedHospitalId);
+          const receiving = choice ?? recommendedId;
+          if (active && receiving) {
+            mutation.mutate({
+              id: active.id,
+              status: "Receiving Hospital Pending",
+              receivingHospitalId: receiving,
+              ...(note.trim() ? { note: note.trim() } : {}),
+            });
+          }
           setConfirm(null);
         }}
       />
@@ -387,21 +494,29 @@ function TransfersPage() {
         confirmLabel="Reject"
         destructive
         onConfirm={() => {
-          if (active) rejectTransfer(active.id, note.trim() || "Rejected by admin.");
+          if (active)
+            mutation.mutate({
+              id: active.id,
+              status: "Rejected",
+              note: note.trim() || "Rejected by admin.",
+            });
           setConfirm(null);
-          setNote("");
         }}
       />
       <ConfirmDialog
         open={confirm === "info"}
         onOpenChange={(o) => !o && setConfirm(null)}
         title="Request more information?"
-        description="Your note will be sent to the requesting hospital and the request stays under review."
+        description="Your note will be recorded on the request and it stays under review."
         confirmLabel="Send request"
         onConfirm={() => {
-          if (active) requestInfo(active.id, note.trim());
+          if (active)
+            mutation.mutate({
+              id: active.id,
+              status: "Under Review",
+              note: `Information requested: ${note.trim()}`,
+            });
           setConfirm(null);
-          setNote("");
         }}
       />
       <ConfirmDialog
@@ -412,9 +527,14 @@ function TransfersPage() {
         confirmLabel="Record decline"
         destructive
         onConfirm={() => {
-          if (active) respondReceivingHospital(active.id, false, note.trim() || undefined);
+          if (active)
+            mutation.mutate({
+              id: active.id,
+              status: "Rejected",
+              note: note.trim() || "Receiving hospital declined the transfer.",
+              actedByHospital: true,
+            });
           setConfirm(null);
-          setNote("");
         }}
       />
     </>
