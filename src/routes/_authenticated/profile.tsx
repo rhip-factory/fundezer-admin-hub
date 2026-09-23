@@ -17,7 +17,9 @@ import {
 } from "@/components/admin/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { usePortal } from "@/store/portal";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { listAuditLogs } from "@/lib/audit.functions";
 import { dateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -40,7 +42,8 @@ export const Route = createFileRoute("/_authenticated/profile")({
 });
 
 function ProfilePage() {
-  const { audit } = usePortal();
+  const fetchAudit = useServerFn(listAuditLogs);
+  const { data: audit = [] } = useQuery({ queryKey: ["audit-logs"], queryFn: () => fetchAudit() });
   const { identity, session, refreshIdentity } = useAuth();
   const accountEmail = identity?.profile.email ?? session?.user.email ?? "";
   const accountName = identity?.profile.full_name ?? "";
@@ -58,7 +61,7 @@ function ProfilePage() {
     setPhone(identity?.profile.phone ?? "");
   }, [accountName, identity?.profile.phone]);
 
-  const mine = audit.filter((a) => a.user === accountName).slice(0, 8);
+  const mine = audit.filter((a) => a.actorUserId === identity?.userId).slice(0, 8);
 
   const save = async () => {
     const next: Record<string, string> = {};

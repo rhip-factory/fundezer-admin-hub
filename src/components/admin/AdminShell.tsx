@@ -23,7 +23,9 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import logo from "@/assets/fundezer-logo.png.asset.json";
-import { usePortal } from "@/store/portal";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { listTransfers } from "@/lib/transfers.functions";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -39,8 +41,12 @@ const NAV = [
 
 function NavList({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { transfers } = usePortal();
-  const pending = transfers.filter((t) =>
+  const fetchTransfers = useServerFn(listTransfers);
+  const { data: transfers = [] } = useQuery({
+    queryKey: ["transfers"],
+    queryFn: () => fetchTransfers(),
+  });
+  const pending = (transfers as Array<{ status: string }>).filter((t) =>
     ["Submitted", "Under Review", "Receiving Hospital Pending"].includes(t.status),
   ).length;
 
