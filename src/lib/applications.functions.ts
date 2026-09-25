@@ -42,12 +42,31 @@ type Ctx = { supabase: any; userId: string; claims: Record<string, unknown> };
 const SELECT = `
   id, title, description, requested_amount, status, review_notes, verification_notes,
   submitted_at, status_changed_at, reviewed_at, decided_at,
-  patient_id, hospital_id,
-  patients:patient_id ( display_name, reference_code, condition, urgency ),
-  hospitals:hospital_id ( name ),
-  causes:cause_id ( name ),
-  services:service_id ( name )
+  patient_id, hospital_id, cause_id, service_id
 `;
+
+async function attachRelations(sb: any, rows: any[]): Promise<any[]> {
+  const ids = (k: string) => [...new Set(rows.map((r) => r[k]).filter(Boolean))] as string[];
+  const load = async (table: string, cols: string, list: string[]) => {
+    if (!list.length) return new Map<string, any>();
+    const { data, error } = await sb.from(table).select(cols).in("id", list);
+    if (error) throw new Error(error.message);
+    return new Map<string, any>((data ?? []).map((d: any) => [d.id, d]));
+  };
+  const [p, h, c, s] = await Promise.all([
+    load("patients", "id, display_name, reference_code, condition, urgency", ids("patient_id")),
+    load("hospitals", "id, name", ids("hospital_id")),
+    load("causes", "id, name", ids("cause_id")),
+    load("services", "id, name", ids("service_id")),
+  ]);
+  return rows.map((r) => ({
+    ...r,
+    patients: p.get(r.patient_id) ?? null,
+    hospitals: h.get(r.hospital_id) ?? null,
+    causes: c.get(r.cause_id) ?? null,
+    services: s.get(r.service_id) ?? null,
+  }));
+}
 
 function toRecord(row: any): ApplicationRecord {
   return {
@@ -96,7 +115,7 @@ export const listApplications = createServerFn({ method: "POST" })
       .select(SELECT)
       .order("submitted_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return (data ?? []).map(toRecord);
+    return (await attachRelations(ctx.supabase, data ?? [])).map(toRecord);
   });
 
 export const setApplicationStatus = createServerFn({ method: "POST" })
@@ -160,5 +179,6 @@ export const setApplicationStatus = createServerFn({ method: "POST" })
       new_state: { status: data.status },
     });
 
-    return toRecord(row);
+    const [full] = await attachRelations(ctx.supabase, [row]);
+    return toRecord(full);
   });
