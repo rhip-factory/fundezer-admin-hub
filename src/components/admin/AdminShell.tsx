@@ -155,10 +155,15 @@ function SidebarBody({ onNavigate }: { onNavigate?: (() => void) | undefined }) 
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const { identity, session } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const current =
     NAV.find((n) => (n.to === "/" ? pathname === "/" : pathname.startsWith(n.to)))?.label ??
     (pathname.startsWith("/settings") ? "Settings" : "Admin Profile");
+  const name = identity?.profile.full_name ?? session?.user.email ?? "Signed in";
+  const roleLabel = identity?.roles.length
+    ? (ROLE_LABELS[identity.roles[0] as string] ?? identity.roles[0])
+    : "Administrator";
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -198,9 +203,19 @@ export function AdminShell({ children }: { children: ReactNode }) {
             >
               <Bell className="size-4" />
             </Button>
-            <span className="hidden rounded-md border border-border bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground sm:inline">
-              Prototype environment
-            </span>
+            <Link
+              to="/profile"
+              aria-label="Open admin profile"
+              className="hidden items-center gap-2 rounded-md border border-border bg-secondary px-2 py-1.5 transition-colors hover:bg-accent sm:flex"
+            >
+              <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                {initialsOf(name)}
+              </span>
+              <span className="min-w-0 text-left">
+                <span className="block max-w-40 truncate text-xs font-semibold text-foreground">{name}</span>
+                <span className="block max-w-40 truncate text-[11px] text-muted-foreground">{roleLabel}</span>
+              </span>
+            </Link>
           </div>
         </header>
 
