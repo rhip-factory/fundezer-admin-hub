@@ -36,19 +36,27 @@ export const listDonations = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<DonationsPayload> => {
     const supabase = (context as unknown as Ctx).supabase;
-    const [{ data: donations, error }, { data: campaigns }, { data: causes }, { data: plans }] =
-      await Promise.all([
-        supabase
-          .from("donations")
-          .select(
-            "id, donor_name, is_anonymous, amount, donation_type, payment_status, allocation_status, payment_method, campaign_id, cause_id, recurring_plan_id, message, created_at",
-          )
-          .order("created_at", { ascending: false }),
-        supabase.from("campaigns").select("id, title"),
-        supabase.from("causes").select("id, name"),
-        supabase.from("recurring_plans").select("id, status, frequency"),
-      ]);
+    const { data: donations, error } = await supabase
+      .from("donations")
+      .select(
+        "id, donor_name, is_anonymous, amount, donation_type, payment_status, allocation_status, payment_method, campaign_id, cause_id, recurring_plan_id, message, created_at",
+      )
+      .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
+
+    const ids = (key: string) =>
+      [...new Set((donations ?? []).map((row: any) => row[key]).filter(Boolean))] as string[];
+    const load = async (table: string, columns: string, list: string[]) => {
+      if (!list.length) return [];
+      const { data, error: relationError } = await supabase.from(table).select(columns).in("id", list);
+      if (relationError) throw new Error(relationError.message);
+      return data ?? [];
+    };
+    const [campaigns, causes, plans] = await Promise.all([
+      load("campaigns", "id, title", ids("campaign_id")),
+      load("causes", "id, name", ids("cause_id")),
+      load("recurring_plans", "id, status, frequency", ids("recurring_plan_id")),
+    ]);
 
     const campaignTitle = new Map<string, string>(
       (campaigns ?? []).map((c: any) => [c.id as string, c.title as string]),

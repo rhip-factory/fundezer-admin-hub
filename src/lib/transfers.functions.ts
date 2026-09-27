@@ -81,13 +81,35 @@ async function actorLabel(ctx: Ctx) {
 
 const SELECT = `
   id, reference_code, patient_id, campaign_id, originating_hospital_id, receiving_hospital_id,
-  service_id, reason, urgency, treatment_phase, status, admin_decision, requested_at,
-  patients:patient_id ( display_name ),
-  origin:originating_hospital_id ( name ),
-  receiving:receiving_hospital_id ( name ),
-  services:service_id ( name ),
-  campaigns:campaign_id ( title )
+  service_id, reason, urgency, treatment_phase, status, admin_decision, requested_at
 `;
+
+async function attachRelations(sb: any, rows: any[]): Promise<any[]> {
+  const ids = (key: string) => [...new Set(rows.map((row) => row[key]).filter(Boolean))] as string[];
+  const hospitalIds = [
+    ...new Set([...ids("originating_hospital_id"), ...ids("receiving_hospital_id")]),
+  ];
+  const load = async (table: string, columns: string, list: string[]) => {
+    if (!list.length) return new Map<string, any>();
+    const { data, error } = await sb.from(table).select(columns).in("id", list);
+    if (error) throw new Error(error.message);
+    return new Map<string, any>((data ?? []).map((item: any) => [item.id, item]));
+  };
+  const [patients, hospitals, services, campaigns] = await Promise.all([
+    load("patients", "id, display_name", ids("patient_id")),
+    load("hospitals", "id, name", hospitalIds),
+    load("services", "id, name", ids("service_id")),
+    load("campaigns", "id, title", ids("campaign_id")),
+  ]);
+  return rows.map((row) => ({
+    ...row,
+    patients: patients.get(row.patient_id) ?? null,
+    origin: hospitals.get(row.originating_hospital_id) ?? null,
+    receiving: hospitals.get(row.receiving_hospital_id) ?? null,
+    services: services.get(row.service_id) ?? null,
+    campaigns: campaigns.get(row.campaign_id) ?? null,
+  }));
+}
 
 function toRecord(row: any, timeline: TransferEventRecord[]): TransferRecord {
   return {
@@ -141,7 +163,8 @@ export const listTransfers = createServerFn({ method: "POST" })
       list.push(eventRecord(e));
       byTransfer.set(e.transfer_id, list);
     }
-    return (rows ?? []).map((row: any) => toRecord(row, byTransfer.get(row.id) ?? []));
+    const completeRows = await attachRelations(supabase, rows ?? []);
+    return completeRows.map((row: any) => toRecord(row, byTransfer.get(row.id) ?? []));
   });
 
 export const listTransferHospitals = createServerFn({ method: "POST" })
@@ -181,7 +204,9 @@ async function readOne(ctx: Ctx, id: string): Promise<TransferRecord> {
       .order("occurred_at", { ascending: true }),
   ]);
   if (error) throw new Error(error.message);
-  return toRecord(row, (events ?? []).map(eventRecord));
+  const [completeRow] = await attachRelations(ctx.supabase, [row]);
+  if (!completeRow) throw new Error("Transfer not found.");
+  return toRecord(completeRow, (events ?? []).map(eventRecord));
 }
 
 export const setTransferStatus = createServerFn({ method: "POST" })
