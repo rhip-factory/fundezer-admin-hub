@@ -49,11 +49,29 @@ type Ctx = { supabase: any; userId: string; claims: Record<string, unknown> };
 
 const SELECT = `
   id, title, internal_summary, status, target, created_at,
-  patient_id, hospital_id, cause_id,
-  patients:patient_id ( display_name ),
-  hospitals:hospital_id ( name ),
-  causes:cause_id ( name )
+  patient_id, hospital_id, cause_id
 `;
+
+async function attachRelations(sb: any, rows: any[]): Promise<any[]> {
+  const ids = (key: string) => [...new Set(rows.map((row) => row[key]).filter(Boolean))] as string[];
+  const load = async (table: string, columns: string, list: string[]) => {
+    if (!list.length) return new Map<string, any>();
+    const { data, error } = await sb.from(table).select(columns).in("id", list);
+    if (error) throw new Error(error.message);
+    return new Map<string, any>((data ?? []).map((item: any) => [item.id, item]));
+  };
+  const [patients, hospitals, causes] = await Promise.all([
+    load("patients", "id, display_name", ids("patient_id")),
+    load("hospitals", "id, name", ids("hospital_id")),
+    load("causes", "id, name", ids("cause_id")),
+  ]);
+  return rows.map((row) => ({
+    ...row,
+    patients: patients.get(row.patient_id) ?? null,
+    hospitals: hospitals.get(row.hospital_id) ?? null,
+    causes: causes.get(row.cause_id) ?? null,
+  }));
+}
 
 const draftSchema = z.object({
   title: z.string().trim().min(3).max(200),
@@ -155,7 +173,8 @@ export const listCampaigns = createServerFn({ method: "POST" })
       byCampaign.set(key, list);
     }
 
-    return (rows ?? []).map((row: any) =>
+    const completeRows = await attachRelations(ctx.supabase, rows ?? []);
+    return completeRows.map((row: any) =>
       toRecord(row, raised.get(row.id) ?? 0, byCampaign.get(row.id) ?? []),
     );
   });
@@ -189,7 +208,9 @@ async function readOne(ctx: Ctx, id: string): Promise<CampaignRecord> {
   const paid = (donations ?? [])
     .filter((d: any) => d.payment_status === "Paid")
     .reduce((sum: number, d: any) => sum + Number(d.amount), 0);
-  return toRecord(row, paid, (donations ?? []).slice(0, 8).map(donationRecord));
+  const [completeRow] = await attachRelations(ctx.supabase, [row]);
+  if (!completeRow) throw new Error("Campaign not found.");
+  return toRecord(completeRow, paid, (donations ?? []).slice(0, 8).map(donationRecord));
 }
 
 export const createCampaign = createServerFn({ method: "POST" })
