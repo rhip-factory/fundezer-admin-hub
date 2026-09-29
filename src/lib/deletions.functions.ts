@@ -21,7 +21,7 @@ async function purgeCampaigns(admin: any, ids: string[]) {
   await admin.from("recurring_plans").update({ campaign_id: null }).in("campaign_id", ids);
   await admin.from("transfers").update({ campaign_id: null }).in("campaign_id", ids);
   for (const table of ["campaign_updates", "fund_requests", "consents", "documents", "treatment_updates", "treatment_journeys"]) {
-    const { error } = await admin.from(table).delete().in("campaign_id", ids);
+    const { error } = await (admin as any).from(table).delete().in("campaign_id", ids);
     if (error) throw new Error(error.message);
   }
   const { error } = await admin.from("campaigns").delete().in("id", ids);
@@ -81,7 +81,7 @@ export const deletePatient = createServerFn({ method: "POST" })
     if (aIds.length) await admin.from("documents").delete().in("application_id", aIds);
 
     for (const table of ["treatment_updates", "treatment_journeys", "patient_hospital_history", "consents", "documents", "applications"]) {
-      const { error } = await admin.from(table).delete().eq("patient_id", data.id);
+      const { error } = await (admin as any).from(table).delete().eq("patient_id", data.id);
       if (error) throw new Error(error.message);
     }
     const { error } = await admin.from("patients").delete().eq("id", data.id);
