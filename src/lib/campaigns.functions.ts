@@ -118,6 +118,17 @@ async function writeAudit(
   });
 }
 
+async function assertApplicationApproved(ctx: Ctx, applicationId: string | null | undefined) {
+  if (!applicationId) return;
+  const { data } = await ctx.supabase
+    .from("applications")
+    .select("status")
+    .eq("id", applicationId)
+    .maybeSingle();
+  if (data?.status !== "Approved")
+    throw new Error("This campaign can't go live until its application has been approved.");
+}
+
 function toRecord(row: any, raised: number, donations: CampaignDonationRecord[]): CampaignRecord {
   return {
     id: row.id,
@@ -252,9 +263,11 @@ export const updateCampaign = createServerFn({ method: "POST" })
     const ctx = context as unknown as Ctx;
     const { data: before } = await ctx.supabase
       .from("campaigns")
-      .select("title, target, status, internal_summary, patient_id, hospital_id, cause_id")
+      .select("title, target, status, internal_summary, patient_id, hospital_id, cause_id, application_id")
       .eq("id", data.id)
       .maybeSingle();
+    if (data.status === "Active" && before?.status !== "Active")
+      await assertApplicationApproved(ctx, before?.application_id);
 
     const { data: row, error } = await ctx.supabase
       .from("campaigns")
@@ -289,9 +302,10 @@ export const setCampaignStatus = createServerFn({ method: "POST" })
     const ctx = context as unknown as Ctx;
     const { data: before } = await ctx.supabase
       .from("campaigns")
-      .select("status, published_at")
+      .select("status, published_at, application_id")
       .eq("id", data.id)
       .maybeSingle();
+    if (data.status === "Active") await assertApplicationApproved(ctx, before?.application_id);
 
     const { data: row, error } = await ctx.supabase
       .from("campaigns")

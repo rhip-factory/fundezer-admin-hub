@@ -54,6 +54,7 @@ import {
   type CampaignStatusValue,
 } from "@/lib/campaigns.functions";
 import { naira, shortDate } from "@/lib/format";
+import { deleteCampaign } from "@/lib/deletions.functions";
 
 export const Route = createFileRoute("/_authenticated/campaigns")({
   head: () => ({
@@ -103,6 +104,7 @@ function CampaignsPage() {
   const createFn = useServerFn(createCampaignFn);
   const updateFn = useServerFn(updateCampaignFn);
   const statusFn = useServerFn(setCampaignStatusFn);
+  const deleteFn = useServerFn(deleteCampaign);
 
   const campaignsQuery = useQuery({
     queryKey: ["campaigns"],
@@ -169,6 +171,20 @@ function CampaignsPage() {
     },
     onError: (error) =>
       toast.error("Could not update status", {
+        description: error instanceof Error ? error.message : "Please try again.",
+      }),
+  });
+
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteFn({ data: { id } }),
+    onSuccess: async () => {
+      setSelected(null);
+      await refresh();
+      toast.success("Campaign deleted");
+    },
+    onError: (error) =>
+      toast.error("Could not delete campaign", {
         description: error instanceof Error ? error.message : "Please try again.",
       }),
   });
@@ -338,6 +354,13 @@ function CampaignsPage() {
                   Mark completed
                 </Button>
               ) : null}
+              <Button
+                variant="destructive"
+                onClick={() => setConfirmDelete(true)}
+                disabled={deleteMutation.isPending}
+              >
+                Delete
+              </Button>
             </>
           ) : null
         }
@@ -529,6 +552,19 @@ function CampaignsPage() {
         onConfirm={() => {
           if (active && pending) statusMutation.mutate({ id: active.id, status: pending });
           setPending(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Delete this campaign permanently?"
+        description="The campaign and its updates, fund requests and documents will be erased. Donation records are kept but unlinked. This cannot be undone."
+        confirmLabel="Delete campaign"
+        destructive
+        onConfirm={() => {
+          if (active) deleteMutation.mutate(active.id);
+          setConfirmDelete(false);
         }}
       />
     </>

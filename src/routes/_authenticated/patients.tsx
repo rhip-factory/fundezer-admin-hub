@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { deletePatient } from "@/lib/deletions.functions";
 import {
+  ConfirmDialog,
   DetailDrawer,
   DrawerSection,
   EmptyState,
@@ -55,6 +58,21 @@ function PatientsPage() {
   const [status, setStatus] = useState("all");
   const [causeFilter, setCauseFilter] = useState("all");
   const [selected, setSelected] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const queryClient = useQueryClient();
+  const removeFn = useServerFn(deletePatient);
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => removeFn({ data: { id } }),
+    onSuccess: async () => {
+      setSelected(null);
+      await queryClient.invalidateQueries();
+      toast.success("Patient deleted");
+    },
+    onError: (error) =>
+      toast.error("Could not delete patient", {
+        description: error instanceof Error ? error.message : "Please try again.",
+      }),
+  });
 
   const causeOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -161,11 +179,35 @@ function PatientsPage() {
         )}
       </SectionCard>
 
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Delete this patient permanently?"
+        description="The patient and all their applications, campaigns, transfers, treatment records and documents will be erased. Donation records are kept but unlinked. This cannot be undone."
+        confirmLabel="Delete patient"
+        destructive
+        onConfirm={() => {
+          if (active) deleteMutation.mutate(active.id);
+          setConfirmDelete(false);
+        }}
+      />
+
       <DetailDrawer
         open={!!active}
         onOpenChange={(o) => !o && setSelected(null)}
         title={active?.displayName ?? ""}
         subtitle={active ? `${active.reference} · ${active.condition}` : ""}
+        footer={
+          active ? (
+            <Button
+              variant="destructive"
+              onClick={() => setConfirmDelete(true)}
+              disabled={deleteMutation.isPending}
+            >
+              Delete patient
+            </Button>
+          ) : null
+        }
       >
         {active ? (
           <>
